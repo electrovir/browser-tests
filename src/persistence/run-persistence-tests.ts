@@ -72,8 +72,10 @@ async function runMechanism({
 
 /** Best-effort storage diagnostics that help explain why quota-managed stores may be unavailable. */
 async function gatherEnvironment(): Promise<PersistenceEnvironment> {
-    const persistentStorage = await navigator.storage.persisted().catch(() => undefined);
-    const estimate = await navigator.storage.estimate().catch(() => undefined);
+    /** Navigator.storage is `undefined` outside HTTPS (dev HTTP on non-localhost). */
+    const storage = navigator.storage as StorageManager | undefined;
+    const persistentStorage = await storage?.persisted().catch(() => undefined);
+    const estimate = await storage?.estimate().catch(() => undefined);
     return {
         persistentStorage,
         quotaBytes: estimate?.quota,

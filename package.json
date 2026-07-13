@@ -34,6 +34,8 @@
     },
     "dependencies": {
         "@augment-vir/assert": "^32.0.0",
+        "@augment-vir/common": "^32.0.0",
+        "bowser": "^2.11.0",
         "element-vir": "^26.17.0"
     },
     "devDependencies": {
