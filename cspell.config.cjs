@@ -7,6 +7,6 @@ module.exports = {
     ],
     words: [
         ...baseConfig.words,
-        'rebrowser'
+        'rebrowser',
     ],
 };

@@ -1,5 +1,6 @@
 import {randomString} from '@augment-vir/common';
 import {css, defineElement, html} from 'element-vir';
+import {ViraError, viraTheme} from 'vira';
 import {
     PersistenceMode,
     runPersistenceTests,
@@ -43,7 +44,7 @@ function renderResult(result: PersistenceRunResult) {
                                 ${report.ok ? '✅' : '❌'}
                                 ${report.error
                                     ? html`
-                                          <span class="error">${report.error}</span>
+                                          <${ViraError}>${report.error}</${ViraError}>
                                       `
                                     : ''}
                             </td>
@@ -71,16 +72,11 @@ export const VirPersistenceTests = defineElement()({
             margin: 16px 0;
         }
 
-        .error {
-            color: #b00020;
-            font-family: monospace;
-        }
-
         .json {
             margin-top: 16px;
             padding: 12px;
             overflow: auto;
-            background: #f5f5f5;
+            background: ${viraTheme.colors['vira-grey-behind-fg-small-body'].background.value};
         }
     `,
     state: () => {

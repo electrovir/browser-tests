@@ -1,4 +1,5 @@
 import {css, defineElement, html} from 'element-vir';
+import {viraTheme} from 'vira';
 import {
     detectionRatingIcons,
     startRebrowserDetections,
@@ -53,7 +54,7 @@ export const VirRebrowserTests = defineElement()({
             overflow: auto;
             font-size: 12px;
             white-space: pre-wrap;
-            background: #f5f5f5;
+            background: ${viraTheme.colors['vira-grey-behind-bg-lowest-contrast'].background.value};
         }
     `,
     state: () => {

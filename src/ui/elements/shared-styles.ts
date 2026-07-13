@@ -1,4 +1,5 @@
 import {css} from 'element-vir';
+import {viraTheme} from 'vira';
 
 /**
  * Table and code styles shared by the test-panel elements, which each live in their own shadow
@@ -17,7 +18,7 @@ export const testPanelStyles = css`
     th,
     td {
         padding: 4px 12px;
-        border: 1px solid #ccc;
+        border: 1px solid ${viraTheme.colors['vira-grey-foreground-decoration'].foreground.value};
         text-align: left;
     }
 `;

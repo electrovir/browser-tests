@@ -1,4 +1,5 @@
 import {css, defineElement, html} from 'element-vir';
+import {VirOsFingerprintTests} from './vir-os-fingerprint-tests.element.js';
 import {VirPersistenceTests} from './vir-persistence-tests.element.js';
 import {VirRebrowserTests} from './vir-rebrowser-tests.element.js';
 
@@ -31,6 +32,7 @@ export const VirApp = defineElement()({
             <div class="panels">
                 <${VirPersistenceTests}></${VirPersistenceTests}>
                 <${VirRebrowserTests}></${VirRebrowserTests}>
+                <${VirOsFingerprintTests}></${VirOsFingerprintTests}>
             </div>
         `;
     },
