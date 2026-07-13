@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Browser Tests</title>
+        <!--
+            A restrictive script-src is required for the rebrowser bypassCsp test to be meaningful:
+            a normal browser blocks the cross-origin probe script, while a CSP bypass loads it.
+            connect-src stays open (including ws/wss) so the dev server and outbound fetches work.
+        -->
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src * data: blob: 'unsafe-inline' 'unsafe-eval'; script-src 'self' blob: 'unsafe-inline' 'unsafe-eval'; connect-src * ws: wss: data: blob:;"
+        />
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0" />
+        <link rel="stylesheet" type="text/css" href="/browser-tests/index.css" />
+      <script type="module" crossorigin src="/browser-tests/assets/index-COfDgIsp.js"></script>
+    </head>
+    <body>
+        <vir-app></vir-app>
+    </body>
+</html>
