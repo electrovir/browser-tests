@@ -19,6 +19,17 @@ describe('os fingerprint report', () => {
     it('never flags a real, unaltered browser as a mismatch', async () => {
         const report = await runOsFingerprints();
 
+        /**
+         * Playwright's WebKit build reports a macOS Safari user agent on every host OS, so on the
+         * Linux and Windows CI runners it is a genuinely spoofed environment (a non-Apple machine
+         * claiming to be macOS Safari) that the detector is correct to flag. Real Safari only runs
+         * on Apple platforms, where this engine reports a match. Skip it so the invariant is
+         * asserted only for engines the harness runs on their native OS.
+         */
+        if (report.groundTruth.browserName === 'Safari') {
+            return;
+        }
+
         report.comparisons.forEach((comparison) => {
             /** A real human on an unaltered browser must never look like a spoofed user agent. */
             assert.notStrictEquals(comparison.verdict, FingerprintVerdict.Mismatch);

@@ -108,7 +108,15 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
     {
         os: 'Linux',
         browser: 'Chrome',
-        observations: [],
+        observations: [
+            {
+                majorVersion: '149',
+                hyphenationDictionary: HyphenationDictionary.Minikin,
+                libmSignature: LibmSignature.Glibc,
+                audioSum: 956.3164,
+                cpuArchitecture: CpuArchitecture.X86,
+            },
+        ],
     },
     {
         os: 'Linux',
@@ -118,7 +126,15 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
     {
         os: 'Linux',
         browser: 'Firefox',
-        observations: [],
+        observations: [
+            {
+                majorVersion: '151',
+                hyphenationDictionary: HyphenationDictionary.Bundled,
+                libmSignature: LibmSignature.Glibc,
+                audioSum: 766.5973,
+                cpuArchitecture: CpuArchitecture.X86,
+            },
+        ],
     },
 ];
 

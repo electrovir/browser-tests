@@ -301,7 +301,11 @@ export type CpuArchitectureResult = Readonly<{
     /** NaN sign bit read from a plain-JS `0 / 0` through a typed-array alias. */
     jsSignBit: number;
     detected: CpuArchitecture;
-    /** True when the WASM and JS probes agree, as they should on real hardware. */
+    /**
+     * True when the WASM and JS probes agree. They legitimately differ on some engines (e.g.
+     * Firefox) that canonicalize the NaN sign bit for plain-JS `0 / 0`, which is why the WASM probe
+     * is the authoritative source.
+     */
     probesAgree: boolean;
 }>;
 

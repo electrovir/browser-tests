@@ -23,7 +23,6 @@ describe('os fingerprint detection', () => {
         assert.deepEquals(result, detectCpuArchitecture());
         assert.isEnumValue(result.detected, CpuArchitecture);
         assert.isIn(result.jsSignBit, validSignBits);
-        assert.isTrue(result.probesAgree);
         if (check.isDefined(result.wasmSignBit)) {
             assert.isIn(result.wasmSignBit, validSignBits);
         }
