@@ -176,7 +176,7 @@ export function guessActualCombo({
 }
 
 export async function runOsFingerprints(): Promise<OsFingerprintReport> {
-    const groundTruth = getBrowserGroundTruth();
+    const groundTruth = await getBrowserGroundTruth();
     const claimedReference = osFingerprintReference.find(
         (entry) => entry.os === groundTruth.osName && entry.browser === groundTruth.browserName,
     );
@@ -186,7 +186,7 @@ export async function runOsFingerprints(): Promise<OsFingerprintReport> {
     const hyphenation = detectHyphenationDictionary();
     const mathLibm = detectMathLibm();
     const audio = await computeAudioFingerprint();
-    /** Safari re-seeds its audio noise every session, so its audio sum is not comparable at all. */
+    /** Safari and Brave both alter the audio render each session, so the sum is not comparable. */
     const audioRandomized = browserRandomizesAudio(groundTruth.browserName);
 
     /** Audio depends on CPU architecture, so it is only compared against same-architecture sums. */

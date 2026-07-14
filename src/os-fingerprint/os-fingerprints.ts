@@ -1,4 +1,4 @@
-// cspell:words libm glibc ucrt minikin fdlibm libsystem tanh atob kansainvälistyminen constitutionalibus scrapfly spoofable aosp hyphenator aarch64 amd64 wow64
+// cspell:words libm glibc ucrt minikin fdlibm libsystem tanh atob kansainvälistyminen constitutionalibus scrapfly spoofable aosp hyphenator aarch64 amd64 wow64 farble farbles
 
 import {check, checkWrap} from '@augment-vir/assert';
 import {getObjectTypedKeys} from '@augment-vir/common';
@@ -84,12 +84,40 @@ export type BrowserGroundTruth = Readonly<{
     browserVersion: string | undefined;
 }>;
 
-export function getBrowserGroundTruth(): BrowserGroundTruth {
+/** Bowser reports Brave as 'Chrome'; this is the brand name the report uses once Brave is detected. */
+export const braveBrowserName = 'Brave';
+
+/** Brave's namespace on `navigator`; present only in Brave and absent from the DOM lib types. */
+type NavigatorBrave = Readonly<{
+    isBrave: () => Promise<boolean>;
+}>;
+
+function getNavigatorBrave(): NavigatorBrave | undefined {
+    const candidate: unknown = Reflect.get(navigator, 'brave');
+    if (!check.isObject(candidate)) {
+        return undefined;
+    }
+    return check.isFunction(Reflect.get(candidate, 'isBrave'))
+        ? (candidate satisfies object as NavigatorBrave)
+        : undefined;
+}
+
+/**
+ * Whether the current browser is Brave. Brave masquerades as Chrome in its user agent, so its own
+ * `navigator.brave.isBrave()` is the only reliable way to tell it apart.
+ */
+export async function detectBrave(): Promise<boolean> {
+    const brave = getNavigatorBrave();
+    return brave ? brave.isBrave() : false;
+}
+
+export async function getBrowserGroundTruth(): Promise<BrowserGroundTruth> {
     const parsed = Bowser.parse(navigator.userAgent);
     return {
         userAgent: navigator.userAgent,
         osName: parsed.os.name,
-        browserName: parsed.browser.name,
+        /** Brave masquerades as Chrome in its user agent, so it is detected out of band. */
+        browserName: (await detectBrave()) ? braveBrowserName : parsed.browser.name,
         browserVersion: parsed.browser.version,
     };
 }
@@ -262,13 +290,20 @@ export type AudioFingerprintResult = Readonly<{
 const audioSampleCount = 5000;
 const audioSampleRate = 44_100;
 
-/** Browsers that add per-session noise to the audio render, making its sum unusable as a signal. */
-const audioRandomizingBrowsers: ReadonlyArray<string> = ['Safari'];
+/**
+ * Browsers that alter the audio render so its sum cannot be used as a stable signal. Safari
+ * re-seeds per-session noise; Brave farbles the samples with a per-session, per-site seed. Both
+ * differ per session and per machine, so no single sum can serve as a reference.
+ */
+const audioRandomizingBrowsers: ReadonlyArray<string> = [
+    'Safari',
+    braveBrowserName,
+];
 
 /**
- * Whether the browser randomizes its audio fingerprint. Safari re-seeds the noise every session, so
- * the same machine produces a different sum on each page load and the audio signal must be
- * ignored.
+ * Whether the browser randomizes its audio fingerprint. Safari re-seeds its noise every session and
+ * Brave farbles the samples per session and site, so the same machine produces a different sum on
+ * each session and the audio signal must be ignored.
  */
 export function browserRandomizesAudio(browserName: string | undefined): boolean {
     return browserName != undefined && audioRandomizingBrowsers.includes(browserName);

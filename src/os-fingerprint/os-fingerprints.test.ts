@@ -7,6 +7,7 @@ import {
     browserRandomizesAudio,
     computeAudioFingerprint,
     CpuArchitecture,
+    detectBrave,
     detectCpuArch,
     detectHyphenationDictionary,
     detectMathLibm,
@@ -49,9 +50,18 @@ describe('os fingerprint detection', () => {
 
     it('flags browsers that randomize their audio fingerprint', () => {
         assert.isTrue(browserRandomizesAudio('Safari'));
+        assert.isTrue(browserRandomizesAudio('Brave'));
         assert.isFalse(browserRandomizesAudio('Chrome'));
         assert.isFalse(browserRandomizesAudio('Firefox'));
         assert.isFalse(browserRandomizesAudio(undefined));
+    });
+
+    it('detects brave deterministically', async () => {
+        const first = await detectBrave();
+        const second = await detectBrave();
+
+        assert.strictEquals(first, second);
+        assert.isBoolean(first);
     });
 
     it('parses cpu architecture from firefox user agents but not frozen macOS ones', () => {

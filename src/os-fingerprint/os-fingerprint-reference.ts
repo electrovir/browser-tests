@@ -1,8 +1,13 @@
-// cspell:words libm ucrt
+// cspell:words libm ucrt farble farbles
 
 import {check} from '@augment-vir/assert';
 import {filterMap} from '@augment-vir/common';
-import {CpuArchitecture, HyphenationDictionary, LibmSignature} from './os-fingerprints.js';
+import {
+    braveBrowserName,
+    CpuArchitecture,
+    HyphenationDictionary,
+    LibmSignature,
+} from './os-fingerprints.js';
 
 /** One captured fingerprint from a specific browser build. */
 export type FingerprintObservation = Readonly<{
@@ -49,6 +54,14 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 libmSignature: LibmSignature.AppleLibm,
                 audioSum: 956.3166342371878,
             },
+            {
+                /** Intel Macs share the x86 Chromium audio sum (956.3164) with Windows and Linux. */
+                majorVersion: '149',
+                cpuArch: CpuArchitecture.X86,
+                hyphenationDictionary: HyphenationDictionary.Apple,
+                libmSignature: LibmSignature.AppleLibm,
+                audioSum: 956.3164,
+            },
         ],
     },
     {
@@ -62,6 +75,14 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                  */
                 majorVersion: '26',
                 cpuArch: CpuArchitecture.Arm,
+                hyphenationDictionary: HyphenationDictionary.Apple,
+                libmSignature: LibmSignature.AppleLibm,
+                audioSum: undefined,
+            },
+            {
+                /** Intel Mac Safari randomizes its audio too, so the sum is left unset. */
+                majorVersion: '18',
+                cpuArch: CpuArchitecture.X86,
                 hyphenationDictionary: HyphenationDictionary.Apple,
                 libmSignature: LibmSignature.AppleLibm,
                 audioSum: undefined,
@@ -85,6 +106,42 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Bundled,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 766.5973066808656,
+            },
+            {
+                /** Intel Mac Firefox; its audio sum barely differs from Apple Silicon Firefox. */
+                majorVersion: '152',
+                cpuArch: CpuArchitecture.X86,
+                hyphenationDictionary: HyphenationDictionary.Bundled,
+                libmSignature: LibmSignature.Glibc,
+                audioSum: 766.5973,
+            },
+        ],
+    },
+    {
+        os: 'macOS',
+        browser: 'Opera',
+        observations: [
+            {
+                /** Opera is Chromium and does not farble, so it shares the x86 Chromium audio sum. */
+                majorVersion: '132',
+                cpuArch: CpuArchitecture.X86,
+                hyphenationDictionary: HyphenationDictionary.Apple,
+                libmSignature: LibmSignature.AppleLibm,
+                audioSum: 956.3164,
+            },
+        ],
+    },
+    {
+        os: 'macOS',
+        browser: braveBrowserName,
+        observations: [
+            {
+                /** Brave farbles the audio render per install, so its sum is left unset. */
+                majorVersion: '149',
+                cpuArch: CpuArchitecture.X86,
+                hyphenationDictionary: HyphenationDictionary.Apple,
+                libmSignature: LibmSignature.AppleLibm,
+                audioSum: undefined,
             },
         ],
     },
@@ -144,6 +201,79 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Bundled,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 766.5973,
+            },
+        ],
+    },
+    {
+        os: 'Android',
+        browser: 'Chrome',
+        observations: [
+            {
+                majorVersion: '150',
+                cpuArch: CpuArchitecture.Arm,
+                hyphenationDictionary: HyphenationDictionary.Minikin,
+                libmSignature: LibmSignature.Glibc,
+                audioSum: 956.572,
+            },
+        ],
+    },
+    {
+        os: 'Windows',
+        browser: 'Microsoft Edge',
+        observations: [
+            {
+                /** Edge is Chromium, so it matches Windows Chrome: minikin, ucrt, and the same sum. */
+                majorVersion: '150',
+                cpuArch: CpuArchitecture.X86,
+                hyphenationDictionary: HyphenationDictionary.Minikin,
+                libmSignature: LibmSignature.Ucrt,
+                audioSum: 956.3164,
+            },
+        ],
+    },
+    {
+        os: 'Linux',
+        browser: braveBrowserName,
+        observations: [
+            {
+                /**
+                 * Brave farbles the audio render with a per-session, per-install seed (observed as
+                 * 955.3808, 955.4175, and 955.4578 on three machines), so its sum is left unset;
+                 * hyphenation and libm are untouched and stay reliable signals.
+                 */
+                majorVersion: '149',
+                cpuArch: CpuArchitecture.X86,
+                hyphenationDictionary: HyphenationDictionary.Minikin,
+                libmSignature: LibmSignature.Glibc,
+                audioSum: undefined,
+            },
+        ],
+    },
+    {
+        os: 'Windows',
+        browser: braveBrowserName,
+        observations: [
+            {
+                /** Brave farbles the audio render per install, so its sum is left unset. */
+                majorVersion: '149',
+                cpuArch: CpuArchitecture.X86,
+                hyphenationDictionary: HyphenationDictionary.Minikin,
+                libmSignature: LibmSignature.Ucrt,
+                audioSum: undefined,
+            },
+        ],
+    },
+    {
+        os: 'Android',
+        browser: braveBrowserName,
+        observations: [
+            {
+                /** Brave farbles the audio render per install, so its sum is left unset. */
+                majorVersion: '150',
+                cpuArch: CpuArchitecture.Arm,
+                hyphenationDictionary: HyphenationDictionary.Minikin,
+                libmSignature: LibmSignature.Glibc,
+                audioSum: undefined,
             },
         ],
     },

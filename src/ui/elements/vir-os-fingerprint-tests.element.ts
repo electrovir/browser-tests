@@ -21,7 +21,7 @@ import {
 import {iconLabel, iconLabelStyles} from './icon-label.js';
 import {testPanelStyles} from './shared-styles.js';
 
-/** Shown wherever an audio sum would be, for browsers that randomize it (Safari). */
+/** Shown wherever an audio sum would be, for browsers that randomize it (Safari and Brave). */
 const randomizedAudioLabel = iconLabel({
     icon: '🎲',
     label: 'random',
@@ -104,8 +104,10 @@ function renderReferenceRow({
     const id = [
         entry.os,
         entry.browser,
-        ...summary.cpuArchitectures,
-    ].join(' ');
+        summary.cpuArchitectures.join('/'),
+    ]
+        .filter((part) => part.length > 0)
+        .join(' ');
     const cells: ReadonlyArray<ReadonlyArray<string>> = [
         summary.hyphenationDictionaries,
         summary.libmSignatures,
