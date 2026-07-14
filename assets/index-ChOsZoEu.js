@@ -181,10 +181,10 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
                   `:eM`
                       <p>Running…</p>
                   `}
-        `}}),lI=function(e){return e.Hyphenation=`hyphenation`,e.MathLibm=`mathLibm`,e.Audio=`audio`,e}({}),uI=function(e){return e.Apple=`apple`,e.Minikin=`minikin`,e.Bundled=`bundled`,e}({}),dI=function(e){return e.Glibc=`glibc`,e.AppleLibm=`appleLibm`,e.Ucrt=`ucrt`,e}({}),fI=function(e){return e.Arm=`arm`,e.X86=`x86`,e}({}),pI=function(e){return e.Match=`match`,e.Mismatch=`mismatch`,e.NoReference=`noReference`,e}({}),mI={match:`🟢`,mismatch:`🔴`,noReference:`⚪️`},hI={match:`match`,mismatch:`mismatch`,noReference:`no reference`};function gI(){let e=lF.default.parse(navigator.userAgent);return{userAgent:navigator.userAgent,osName:e.os.name,browserName:e.browser.name,browserVersion:e.browser.version}}var _I=20,vI=`kansainvälistyminen`,yI=`constitutionalibus`;function bI({lang:e,word:t,enableHyphens:n}){let r=n?`auto`:`none`,i=document.createElement(`div`);i.setAttribute(`lang`,e),i.style.cssText=[`position:absolute`,`left:-9999px`,`top:0`,`width:6ch`,`font:${_I}px serif`,`hyphens:${r}`,`-webkit-hyphens:${r}`,`overflow-wrap:normal`,`word-break:normal`].join(`;`),i.textContent=t,document.body.append(i);let a=i.getBoundingClientRect().height;return i.remove(),a}function xI({lang:e,word:t}){let n=bI({lang:e,word:t,enableHyphens:!0}),r=bI({lang:e,word:t,enableHyphens:!1});return{autoHeight:n,baselineHeight:r,hyphenates:n>r*1.5}}function SI({finnishHyphenates:e,latinHyphenates:t}){return e&&t?`bundled`:!e&&!t?void 0:e?`apple`:`minikin`}function CI(){let e=xI({lang:`fi`,word:vI}),t=xI({lang:`la`,word:yI});return{finnishAutoHeight:e.autoHeight,finnishBaselineHeight:e.baselineHeight,latinAutoHeight:t.autoHeight,latinBaselineHeight:t.baselineHeight,finnishHyphenates:e.hyphenates,latinHyphenates:t.hyphenates,detected:SI({finnishHyphenates:e.hyphenates,latinHyphenates:t.hyphenates})}}var wI=.5,TI=[.7,.8,.9],EI={glibc:[.6043677771171636,.6640367702678491,.7162978701990245],appleLibm:[.6043677771171635,.664036770267849,.7162978701990245],ucrt:[.6043677771171635,.6640367702678489,.7162978701990244]};function DI(e){return s_(EI).find(t=>EI[t].every((t,n)=>t===e[n]))}function OI(){let e=TI.map(e=>Math.tanh(e));return{anchorTanh:Math.tanh(wI),probeTanh:e,detected:DI(e)}}var kI=5e3,AI=44100,jI=[`Safari`];function MI(e){return e!=null&&jI.includes(e)}async function NI(){if(!jy.isFunction(globalThis.OfflineAudioContext))return;let e=new OfflineAudioContext(1,kI,AI),t=e.createOscillator();t.type=`triangle`,t.frequency.value=1e3;let n=e.createDynamicsCompressor();n.threshold.value=-50,n.knee.value=40,n.ratio.value=12,n.attack.value=0,n.release.value=.2,t.connect(n),n.connect(e.destination),t.start();let r=(await e.startRendering()).getChannelData(0);return{sum:r.reduce((e,t)=>e+Math.abs(t),0),sampleCount:r.length}}function PI(){let e=Reflect.get(navigator,`userAgentData`);if(jy.isObject(e))return jy.isFunction(Reflect.get(e,`getHighEntropyValues`))?e:void 0}var FI=[`aarch64`,`arm64`],II=[`x86_64`,`x64`,`win64`,`wow64`,`amd64`,`i686`,`i386`];function LI(e){let t=e.toLowerCase();if(FI.some(e=>t.includes(e)))return`arm`;if(II.some(e=>t.includes(e)))return`x86`}async function RI(){let e=PI();if(e){let t=await e.getHighEntropyValues([`architecture`]),n=ky.isEnumValue(t.architecture,fI);if(n!=null)return n}if(lF.default.parse(navigator.userAgent).browser.name===`Firefox`)return LI(navigator.userAgent)}var zI=[{os:`macOS`,browser:`Chrome`,observations:[{majorVersion:`140`,cpuArch:fI.Arm,hyphenationDictionary:uI.Apple,libmSignature:dI.Glibc,audioSum:956.316634},{majorVersion:`149`,cpuArch:fI.Arm,hyphenationDictionary:uI.Apple,libmSignature:dI.AppleLibm,audioSum:956.3166342371878}]},{os:`macOS`,browser:`Safari`,observations:[{majorVersion:`26`,cpuArch:fI.Arm,hyphenationDictionary:uI.Apple,libmSignature:dI.AppleLibm,audioSum:void 0}]},{os:`macOS`,browser:`Firefox`,observations:[{majorVersion:`148`,cpuArch:fI.Arm,hyphenationDictionary:uI.Bundled,libmSignature:dI.Glibc,audioSum:766.597307},{majorVersion:`151`,cpuArch:fI.Arm,hyphenationDictionary:uI.Bundled,libmSignature:dI.Glibc,audioSum:766.5973066808656}]},{os:`Windows`,browser:`Chrome`,observations:[{majorVersion:`149`,cpuArch:fI.X86,hyphenationDictionary:uI.Minikin,libmSignature:dI.Ucrt,audioSum:956.3164}]},{os:`Windows`,browser:`Firefox`,observations:[{majorVersion:`151`,cpuArch:fI.X86,hyphenationDictionary:uI.Bundled,libmSignature:dI.Glibc,audioSum:766.5973}]},{os:`Linux`,browser:`Chrome`,observations:[{majorVersion:`149`,cpuArch:fI.X86,hyphenationDictionary:uI.Minikin,libmSignature:dI.Glibc,audioSum:956.3164}]},{os:`Linux`,browser:`Firefox`,observations:[{majorVersion:`151`,cpuArch:fI.X86,hyphenationDictionary:uI.Bundled,libmSignature:dI.Glibc,audioSum:766.5973},{majorVersion:`152`,cpuArch:fI.X86,hyphenationDictionary:uI.Bundled,libmSignature:dI.Glibc,audioSum:766.5973}]}];function BI(e){return e.filter((t,n)=>e.indexOf(t)===n)}function VI(e){return{cpuArchitectures:BI(aF(e,e=>e.cpuArch,jy.isDefined)),hyphenationDictionaries:BI(aF(e,e=>e.hyphenationDictionary,jy.isDefined)),libmSignatures:BI(aF(e,e=>e.libmSignature,jy.isDefined)),audioSums:BI(aF(e,e=>e.audioSum,jy.isDefined))}}function HI({observations:e,cpuArch:t}){return BI(aF(t==null?e:e.filter(e=>e.cpuArch===t),e=>e.audioSum,jy.isDefined))}var UI={[lI.Hyphenation]:`hyphenation dictionary`,[lI.MathLibm]:`math libm signature`,[lI.Audio]:`audio fingerprint`},WI=1e-4,GI={hyphenation:2,audio:2,libm:1};function KI({live:e,claimedValues:t,isMatch:n}){return t.length===0?pI.NoReference:e!=null&&t.some(n)?pI.Match:pI.Mismatch}function qI({candidate:e,live:t}){return Math.abs(e-t)<=WI}function JI({entry:e,detected:t}){let n=VI(e.observations),r=t.audio,i=HI({observations:e.observations,cpuArch:t.cpuArch});return[t.hyphenation!=null&&n.hyphenationDictionaries.includes(t.hyphenation)?GI.hyphenation:0,t.libm!=null&&n.libmSignatures.includes(t.libm)?GI.libm:0,r!=null&&i.some(e=>qI({candidate:e,live:r}))?GI.audio:0].reduce((e,t)=>e+t,0)}function YI({detected:e,claimedOsName:t,claimedBrowserName:n}){let r=aF(zI,r=>{let i=r.os===t&&r.browser===n?0:JI({entry:r,detected:e});return i>0?{entry:r,score:i}:void 0},jy.isDefined).toSorted((e,t)=>t.score-e.score)[0];return r?`${r.entry.os} ${r.entry.browser}`:void 0}async function XI(){let e=gI(),t=zI.find(t=>t.os===e.osName&&t.browser===e.browserName),n=VI(t?.observations??[]),r=await RI(),i=CI(),a=OI(),o=await NI(),s=MI(e.browserName),c=HI({observations:t?.observations??[],cpuArch:r}),l=[{type:lI.Hyphenation,label:UI[lI.Hyphenation],detected:i.detected??`none`,expected:n.hyphenationDictionaries,randomized:!1,verdict:KI({live:i.detected,claimedValues:n.hyphenationDictionaries,isMatch:e=>e===i.detected})},{type:lI.MathLibm,label:UI[lI.MathLibm],detected:a.detected??`none`,expected:n.libmSignatures,randomized:!1,verdict:KI({live:a.detected,claimedValues:n.libmSignatures,isMatch:e=>e===a.detected})},{type:lI.Audio,label:UI[lI.Audio],detected:o==null?`none`:o.sum.toFixed(4),expected:c.map(e=>e.toFixed(4)),randomized:s,verdict:s?pI.NoReference:KI({live:o?.sum,claimedValues:c,isMatch:e=>o!=null&&qI({candidate:e,live:o.sum})})}];return{groundTruth:e,detectedCpuArch:r,claimedReference:t,comparisons:l,actualGuess:l.some(e=>e.verdict===pI.Mismatch)?YI({detected:{cpuArch:r,hyphenation:i.detected,libm:a.detected,audio:s?void 0:o?.sum},claimedOsName:e.osName,claimedBrowserName:e.browserName}):void 0}}function ZI(e){let t=e.comparisons.toSorted((e,t)=>e.label.localeCompare(t.label)).map(e=>{let t=e.randomized?`randomized`:e.detected,n=e.randomized?`random`:e.expected.join(`, `)||`no reference`;return`- ${e.label}: ${t} (expected: ${n}) → ${hI[e.verdict]}`}),n=e.actualGuess?[``,`These fingerprints actually look like: ${e.actualGuess}`]:[];return[`OS Fingerprint Report`,``,`User agent: ${e.groundTruth.userAgent}`,`OS: ${e.groundTruth.osName||`unknown`}`,`Browser: ${e.groundTruth.browserName||`unknown`}`,`Version: ${e.groundTruth.browserVersion||`unknown`}`,`CPU architecture: ${e.detectedCpuArch||`unknown`}`,``,`Fingerprints:`,...t,...n].join(`
-`)}var QI=aI({icon:`🎲`,label:`random`});function $I(e){return e.length===0?eM`
+        `}}),lI=function(e){return e.Hyphenation=`hyphenation`,e.MathLibm=`mathLibm`,e.Audio=`audio`,e}({}),uI=function(e){return e.Apple=`apple`,e.Minikin=`minikin`,e.Bundled=`bundled`,e}({}),dI=function(e){return e.Glibc=`glibc`,e.AppleLibm=`appleLibm`,e.Ucrt=`ucrt`,e}({}),fI=function(e){return e.Arm=`arm`,e.X86=`x86`,e}({}),pI=function(e){return e.Match=`match`,e.Mismatch=`mismatch`,e.NoReference=`noReference`,e}({}),mI={match:`🟢`,mismatch:`🔴`,noReference:`⚪️`},hI={match:`match`,mismatch:`mismatch`,noReference:`no reference`},gI=`Brave`;function _I(){let e=Reflect.get(navigator,`brave`);if(jy.isObject(e))return jy.isFunction(Reflect.get(e,`isBrave`))?e:void 0}async function vI(){let e=_I();return e?e.isBrave():!1}async function yI(){let e=lF.default.parse(navigator.userAgent);return{userAgent:navigator.userAgent,osName:e.os.name,browserName:await vI()?gI:e.browser.name,browserVersion:e.browser.version}}var bI=20,xI=`kansainvälistyminen`,SI=`constitutionalibus`;function CI({lang:e,word:t,enableHyphens:n}){let r=n?`auto`:`none`,i=document.createElement(`div`);i.setAttribute(`lang`,e),i.style.cssText=[`position:absolute`,`left:-9999px`,`top:0`,`width:6ch`,`font:${bI}px serif`,`hyphens:${r}`,`-webkit-hyphens:${r}`,`overflow-wrap:normal`,`word-break:normal`].join(`;`),i.textContent=t,document.body.append(i);let a=i.getBoundingClientRect().height;return i.remove(),a}function wI({lang:e,word:t}){let n=CI({lang:e,word:t,enableHyphens:!0}),r=CI({lang:e,word:t,enableHyphens:!1});return{autoHeight:n,baselineHeight:r,hyphenates:n>r*1.5}}function TI({finnishHyphenates:e,latinHyphenates:t}){return e&&t?`bundled`:!e&&!t?void 0:e?`apple`:`minikin`}function EI(){let e=wI({lang:`fi`,word:xI}),t=wI({lang:`la`,word:SI});return{finnishAutoHeight:e.autoHeight,finnishBaselineHeight:e.baselineHeight,latinAutoHeight:t.autoHeight,latinBaselineHeight:t.baselineHeight,finnishHyphenates:e.hyphenates,latinHyphenates:t.hyphenates,detected:TI({finnishHyphenates:e.hyphenates,latinHyphenates:t.hyphenates})}}var DI=.5,OI=[.7,.8,.9],kI={glibc:[.6043677771171636,.6640367702678491,.7162978701990245],appleLibm:[.6043677771171635,.664036770267849,.7162978701990245],ucrt:[.6043677771171635,.6640367702678489,.7162978701990244]};function AI(e){return s_(kI).find(t=>kI[t].every((t,n)=>t===e[n]))}function jI(){let e=OI.map(e=>Math.tanh(e));return{anchorTanh:Math.tanh(DI),probeTanh:e,detected:AI(e)}}var MI=5e3,NI=44100,PI=[`Safari`,gI];function FI(e){return e!=null&&PI.includes(e)}async function II(){if(!jy.isFunction(globalThis.OfflineAudioContext))return;let e=new OfflineAudioContext(1,MI,NI),t=e.createOscillator();t.type=`triangle`,t.frequency.value=1e3;let n=e.createDynamicsCompressor();n.threshold.value=-50,n.knee.value=40,n.ratio.value=12,n.attack.value=0,n.release.value=.2,t.connect(n),n.connect(e.destination),t.start();let r=(await e.startRendering()).getChannelData(0);return{sum:r.reduce((e,t)=>e+Math.abs(t),0),sampleCount:r.length}}function LI(){let e=Reflect.get(navigator,`userAgentData`);if(jy.isObject(e))return jy.isFunction(Reflect.get(e,`getHighEntropyValues`))?e:void 0}var RI=[`aarch64`,`arm64`],zI=[`x86_64`,`x64`,`win64`,`wow64`,`amd64`,`i686`,`i386`];function BI(e){let t=e.toLowerCase();if(RI.some(e=>t.includes(e)))return`arm`;if(zI.some(e=>t.includes(e)))return`x86`}async function VI(){let e=LI();if(e){let t=await e.getHighEntropyValues([`architecture`]),n=ky.isEnumValue(t.architecture,fI);if(n!=null)return n}if(lF.default.parse(navigator.userAgent).browser.name===`Firefox`)return BI(navigator.userAgent)}var HI=[{os:`macOS`,browser:`Chrome`,observations:[{majorVersion:`140`,cpuArch:fI.Arm,hyphenationDictionary:uI.Apple,libmSignature:dI.Glibc,audioSum:956.316634},{majorVersion:`149`,cpuArch:fI.Arm,hyphenationDictionary:uI.Apple,libmSignature:dI.AppleLibm,audioSum:956.3166342371878},{majorVersion:`149`,cpuArch:fI.X86,hyphenationDictionary:uI.Apple,libmSignature:dI.AppleLibm,audioSum:956.3164}]},{os:`macOS`,browser:`Safari`,observations:[{majorVersion:`26`,cpuArch:fI.Arm,hyphenationDictionary:uI.Apple,libmSignature:dI.AppleLibm,audioSum:void 0},{majorVersion:`18`,cpuArch:fI.X86,hyphenationDictionary:uI.Apple,libmSignature:dI.AppleLibm,audioSum:void 0}]},{os:`macOS`,browser:`Firefox`,observations:[{majorVersion:`148`,cpuArch:fI.Arm,hyphenationDictionary:uI.Bundled,libmSignature:dI.Glibc,audioSum:766.597307},{majorVersion:`151`,cpuArch:fI.Arm,hyphenationDictionary:uI.Bundled,libmSignature:dI.Glibc,audioSum:766.5973066808656},{majorVersion:`152`,cpuArch:fI.X86,hyphenationDictionary:uI.Bundled,libmSignature:dI.Glibc,audioSum:766.5973}]},{os:`macOS`,browser:`Opera`,observations:[{majorVersion:`132`,cpuArch:fI.X86,hyphenationDictionary:uI.Apple,libmSignature:dI.AppleLibm,audioSum:956.3164}]},{os:`macOS`,browser:gI,observations:[{majorVersion:`149`,cpuArch:fI.X86,hyphenationDictionary:uI.Apple,libmSignature:dI.AppleLibm,audioSum:void 0}]},{os:`Windows`,browser:`Chrome`,observations:[{majorVersion:`149`,cpuArch:fI.X86,hyphenationDictionary:uI.Minikin,libmSignature:dI.Ucrt,audioSum:956.3164}]},{os:`Windows`,browser:`Firefox`,observations:[{majorVersion:`151`,cpuArch:fI.X86,hyphenationDictionary:uI.Bundled,libmSignature:dI.Glibc,audioSum:766.5973}]},{os:`Linux`,browser:`Chrome`,observations:[{majorVersion:`149`,cpuArch:fI.X86,hyphenationDictionary:uI.Minikin,libmSignature:dI.Glibc,audioSum:956.3164}]},{os:`Linux`,browser:`Firefox`,observations:[{majorVersion:`151`,cpuArch:fI.X86,hyphenationDictionary:uI.Bundled,libmSignature:dI.Glibc,audioSum:766.5973},{majorVersion:`152`,cpuArch:fI.X86,hyphenationDictionary:uI.Bundled,libmSignature:dI.Glibc,audioSum:766.5973}]},{os:`Android`,browser:`Chrome`,observations:[{majorVersion:`150`,cpuArch:fI.Arm,hyphenationDictionary:uI.Minikin,libmSignature:dI.Glibc,audioSum:956.572}]},{os:`Windows`,browser:`Microsoft Edge`,observations:[{majorVersion:`150`,cpuArch:fI.X86,hyphenationDictionary:uI.Minikin,libmSignature:dI.Ucrt,audioSum:956.3164}]},{os:`Linux`,browser:gI,observations:[{majorVersion:`149`,cpuArch:fI.X86,hyphenationDictionary:uI.Minikin,libmSignature:dI.Glibc,audioSum:void 0}]},{os:`Windows`,browser:gI,observations:[{majorVersion:`149`,cpuArch:fI.X86,hyphenationDictionary:uI.Minikin,libmSignature:dI.Ucrt,audioSum:void 0}]},{os:`Android`,browser:gI,observations:[{majorVersion:`150`,cpuArch:fI.Arm,hyphenationDictionary:uI.Minikin,libmSignature:dI.Glibc,audioSum:void 0}]}];function UI(e){return e.filter((t,n)=>e.indexOf(t)===n)}function WI(e){return{cpuArchitectures:UI(aF(e,e=>e.cpuArch,jy.isDefined)),hyphenationDictionaries:UI(aF(e,e=>e.hyphenationDictionary,jy.isDefined)),libmSignatures:UI(aF(e,e=>e.libmSignature,jy.isDefined)),audioSums:UI(aF(e,e=>e.audioSum,jy.isDefined))}}function GI({observations:e,cpuArch:t}){return UI(aF(t==null?e:e.filter(e=>e.cpuArch===t),e=>e.audioSum,jy.isDefined))}var KI={[lI.Hyphenation]:`hyphenation dictionary`,[lI.MathLibm]:`math libm signature`,[lI.Audio]:`audio fingerprint`},qI=1e-4,JI={hyphenation:2,audio:2,libm:1};function YI({live:e,claimedValues:t,isMatch:n}){return t.length===0?pI.NoReference:e!=null&&t.some(n)?pI.Match:pI.Mismatch}function XI({candidate:e,live:t}){return Math.abs(e-t)<=qI}function ZI({entry:e,detected:t}){let n=WI(e.observations),r=t.audio,i=GI({observations:e.observations,cpuArch:t.cpuArch});return[t.hyphenation!=null&&n.hyphenationDictionaries.includes(t.hyphenation)?JI.hyphenation:0,t.libm!=null&&n.libmSignatures.includes(t.libm)?JI.libm:0,r!=null&&i.some(e=>XI({candidate:e,live:r}))?JI.audio:0].reduce((e,t)=>e+t,0)}function QI({detected:e,claimedOsName:t,claimedBrowserName:n}){let r=aF(HI,r=>{let i=r.os===t&&r.browser===n?0:ZI({entry:r,detected:e});return i>0?{entry:r,score:i}:void 0},jy.isDefined).toSorted((e,t)=>t.score-e.score)[0];return r?`${r.entry.os} ${r.entry.browser}`:void 0}async function $I(){let e=await yI(),t=HI.find(t=>t.os===e.osName&&t.browser===e.browserName),n=WI(t?.observations??[]),r=await VI(),i=EI(),a=jI(),o=await II(),s=FI(e.browserName),c=GI({observations:t?.observations??[],cpuArch:r}),l=[{type:lI.Hyphenation,label:KI[lI.Hyphenation],detected:i.detected??`none`,expected:n.hyphenationDictionaries,randomized:!1,verdict:YI({live:i.detected,claimedValues:n.hyphenationDictionaries,isMatch:e=>e===i.detected})},{type:lI.MathLibm,label:KI[lI.MathLibm],detected:a.detected??`none`,expected:n.libmSignatures,randomized:!1,verdict:YI({live:a.detected,claimedValues:n.libmSignatures,isMatch:e=>e===a.detected})},{type:lI.Audio,label:KI[lI.Audio],detected:o==null?`none`:o.sum.toFixed(4),expected:c.map(e=>e.toFixed(4)),randomized:s,verdict:s?pI.NoReference:YI({live:o?.sum,claimedValues:c,isMatch:e=>o!=null&&XI({candidate:e,live:o.sum})})}];return{groundTruth:e,detectedCpuArch:r,claimedReference:t,comparisons:l,actualGuess:l.some(e=>e.verdict===pI.Mismatch)?QI({detected:{cpuArch:r,hyphenation:i.detected,libm:a.detected,audio:s?void 0:o?.sum},claimedOsName:e.osName,claimedBrowserName:e.browserName}):void 0}}function eL(e){let t=e.comparisons.toSorted((e,t)=>e.label.localeCompare(t.label)).map(e=>{let t=e.randomized?`randomized`:e.detected,n=e.randomized?`random`:e.expected.join(`, `)||`no reference`;return`- ${e.label}: ${t} (expected: ${n}) → ${hI[e.verdict]}`}),n=e.actualGuess?[``,`These fingerprints actually look like: ${e.actualGuess}`]:[];return[`OS Fingerprint Report`,``,`User agent: ${e.groundTruth.userAgent}`,`OS: ${e.groundTruth.osName||`unknown`}`,`Browser: ${e.groundTruth.browserName||`unknown`}`,`Version: ${e.groundTruth.browserVersion||`unknown`}`,`CPU architecture: ${e.detectedCpuArch||`unknown`}`,``,`Fingerprints:`,...t,...n].join(`
+`)}var tL=aI({icon:`🎲`,label:`random`});function nL(e){return e.length===0?eM`
               <span class="placeholder">TBD</span>
-          `:e.join(`, `)}function eL(e){return eM`
+          `:e.join(`, `)}function rL(e){return eM`
         <table>
             <thead>
                 <tr>
@@ -200,7 +200,7 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
                                 <td>${e.label}</td>
                                 <td>${e.detected}</td>
                                 <td>
-                                    ${e.randomized?QI:$I(e.expected)}
+                                    ${e.randomized?tL:nL(e.expected)}
                                 </td>
                                 <td>
                                     ${aI({icon:mI[e.verdict],label:hI[e.verdict]})}
@@ -209,7 +209,7 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
                         `)}
             </tbody>
         </table>
-    `}function tL(e){return eM`
+    `}function iL(e){return eM`
         <table>
             <thead>
                 <tr>
@@ -228,17 +228,17 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
                 </tr>
             </tbody>
         </table>
-    `}function nL({entry:e,isCurrent:t}){let n=VI(e.observations),r=[e.os,e.browser,...n.cpuArchitectures].join(` `),i=[n.hyphenationDictionaries,n.libmSignatures];return eM`
+    `}function aL({entry:e,isCurrent:t}){let n=WI(e.observations),r=[e.os,e.browser,n.cpuArchitectures.join(`/`)].filter(e=>e.length>0).join(` `),i=[n.hyphenationDictionaries,n.libmSignatures];return eM`
         <tr class=${t?`current`:``}>
             <td>${r}${t?` (this browser)`:``}</td>
             ${i.map(e=>eM`
-                    <td>${$I(e)}</td>
+                    <td>${nL(e)}</td>
                 `)}
             <td>
-                ${MI(e.browser)?QI:$I(n.audioSums.map(e=>e.toFixed(4)))}
+                ${FI(e.browser)?tL:nL(n.audioSums.map(e=>e.toFixed(4)))}
             </td>
         </tr>
-    `}function rL(e){return eM`
+    `}function oL(e){return eM`
         <table>
             <thead>
                 <tr>
@@ -249,10 +249,10 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
                 </tr>
             </thead>
             <tbody>
-                ${zI.toSorted((e,t)=>`${e.os} ${e.browser}`.localeCompare(`${t.os} ${t.browser}`)).map(t=>nL({entry:t,isCurrent:t.os===e.groundTruth.osName&&t.browser===e.groundTruth.browserName}))}
+                ${HI.toSorted((e,t)=>`${e.os} ${e.browser}`.localeCompare(`${t.os} ${t.browser}`)).map(t=>aL({entry:t,isCurrent:t.os===e.groundTruth.osName&&t.browser===e.groundTruth.browserName}))}
             </tbody>
         </table>
-    `}var iL=zj()({tagName:`vir-os-fingerprint-tests`,styles:Cj`
+    `}var sL=zj()({tagName:`vir-os-fingerprint-tests`,styles:Cj`
         :host {
             display: block;
         }
@@ -287,20 +287,20 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
             border-radius: 8px;
             background: ${$P.colors[`vira-red-behind-fg-small-body`].background.value};
         }
-    `,state:()=>({report:void 0,copied:!1}),init({updateState:e}){XI().then(t=>{e({report:t})})},render({state:e,updateState:t}){let n=e.report;return eM`
+    `,state:()=>({report:void 0,copied:!1}),init({updateState:e}){$I().then(t=>{e({report:t})})},render({state:e,updateState:t}){let n=e.report;return eM`
             <h1>OS Fingerprint</h1>
             <button
                 ?disabled=${!n}
-                ${Wj(`click`,async()=>{if(n)try{await navigator.clipboard.writeText(ZI(n)),t({copied:!0}),await x_({milliseconds:2e3}),t({copied:!1})}catch{}})}
+                ${Wj(`click`,async()=>{if(n)try{await navigator.clipboard.writeText(eL(n)),t({copied:!0}),await x_({milliseconds:2e3}),t({copied:!1})}catch{}})}
             >
                 ${e.copied?`Copied!`:`Copy Report`}
             </button>
             ${n?eM`
                       <code class="user-agent">${n.groundTruth.userAgent}</code>
                       <h2>This Browser</h2>
-                      ${eL(n)}
+                      ${rL(n)}
                       <h2>Detected</h2>
-                      ${tL(n)}
+                      ${iL(n)}
                       ${n.actualGuess?eM`
                                 <p class="guess">
                                     ${aI({icon:`⚠️`,label:`These fingerprints actually look like`})}
@@ -309,11 +309,11 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
                                 </p>
                             `:``}
                       <h2>Reference</h2>
-                      ${rL(n)}
+                      ${oL(n)}
                   `:eM`
                       <p>Running fingerprints…</p>
                   `}
-        `}}),aL=`persistenceMarker`,oL=`persistenceDb`,sL=`markers`,cL=`persistence-cache`,lL=`persistence-marker`,uL=`sw.js`,dL=`persistence-marker.txt`,fL=function(e){return e.Cookie=`cookie`,e.LocalStorage=`localStorage`,e.SessionStorage=`sessionStorage`,e.IndexedDb=`indexedDb`,e.CacheStorage=`cacheStorage`,e.ServiceWorker=`serviceWorker`,e.Opfs=`opfs`,e}({}),pL={cookie:`Cookies`,localStorage:`localStorage`,sessionStorage:`sessionStorage`,indexedDb:`IndexedDB`,cacheStorage:`Cache Storage`,serviceWorker:`Service Worker registration`,opfs:`Origin Private File System`};function mL(e){document.cookie=`${aL}=${e}; path=/; max-age=${3600*24*365}; SameSite=Lax`}function hL(e){return document.cookie.split(`; `).find(e=>e.startsWith(`${aL}=`))===`${aL}=${e}`}function gL(e){localStorage.setItem(aL,e)}function _L(e){return localStorage.getItem(aL)===e}function vL(e){sessionStorage.setItem(aL,e)}function yL(e){return sessionStorage.getItem(aL)===e}function bL(){return new Promise((e,t)=>{let n=indexedDB.open(oL,1);n.onupgradeneeded=()=>{n.result.createObjectStore(sL)},n.onsuccess=()=>e(n.result),n.onerror=()=>t(Error(`open failed (${n.error?.name||`unknown`}): ${n.error?.message||`no message`}`))})}async function xL(e){let t=await bL();try{await new Promise((n,r)=>{let i=t.transaction(sL,`readwrite`);i.objectStore(sL).put(e,aL),i.oncomplete=()=>n(),i.onerror=()=>r(Error(`write transaction failed.`))})}finally{t.close()}}async function SL(e){let t=await bL();try{return await new Promise((e,n)=>{let r=t.transaction(sL,`readonly`).objectStore(sL).get(aL);r.onsuccess=()=>e(r.result),r.onerror=()=>n(Error(`read failed.`))})===e}finally{t.close()}}async function CL(e){await(await caches.open(cL)).put(lL,new Response(e))}async function wL(e){let t=await(await caches.open(cL)).match(lL);return t!=null&&await t.text()===e}async function TL(){if(!(`serviceWorker`in navigator))throw Error(`Service workers are not supported in this browser.`);await navigator.serviceWorker.register(uL),await Promise.race([navigator.serviceWorker.ready,new Promise(e=>{setTimeout(e,5e3)})])}async function EL(){return`serviceWorker`in navigator?await navigator.serviceWorker.getRegistration()!=null:!1}async function DL(e){let t=await(await(await navigator.storage.getDirectory()).getFileHandle(dL,{create:!0})).createWritable();await t.write(e),await t.close()}async function OL(e){return await(await(await(await navigator.storage.getDirectory()).getFileHandle(dL)).getFile()).text()===e}var kL={cookie:{seed:mL,verify:hL},localStorage:{seed:gL,verify:_L},sessionStorage:{seed:vL,verify:yL},indexedDb:{seed:xL,verify:SL},cacheStorage:{seed:CL,verify:wL},serviceWorker:{seed:TL,verify:EL},opfs:{seed:DL,verify:OL}},AL=function(e){return e.Seed=`seed`,e.Verify=`verify`,e}({}),jL={seed:async(e,t)=>(await e.seed(t),!0),verify:(e,t)=>Promise.resolve(e.verify(t))};async function ML({mode:e,marker:t,mechanism:n}){try{let r=await jL[e](kL[n],t);return{mechanism:n,label:pL[n],ok:r,error:void 0}}catch(e){return{mechanism:n,label:pL[n],ok:!1,error:jy.isError(e)?e.message:`unknown error`}}}async function NL(){let e=navigator.storage,t=await e?.persisted().catch(()=>void 0),n=await e?.estimate().catch(()=>void 0);return{persistentStorage:t,quotaBytes:n?.quota,usageBytes:n?.usage}}async function PL({mode:e,marker:t}){let n=await Promise.all(Object.values(fL).map(n=>ML({mode:e,marker:t,mechanism:n})));return{mode:e,marker:t,environment:await NL(),reports:n}}function FL(e){let t=new URLSearchParams(e).get(`mode`);return Object.values(AL).find(e=>e===t)}function IL(e){return eM`
+        `}}),cL=`persistenceMarker`,lL=`persistenceDb`,uL=`markers`,dL=`persistence-cache`,fL=`persistence-marker`,pL=`sw.js`,mL=`persistence-marker.txt`,hL=function(e){return e.Cookie=`cookie`,e.LocalStorage=`localStorage`,e.SessionStorage=`sessionStorage`,e.IndexedDb=`indexedDb`,e.CacheStorage=`cacheStorage`,e.ServiceWorker=`serviceWorker`,e.Opfs=`opfs`,e}({}),gL={cookie:`Cookies`,localStorage:`localStorage`,sessionStorage:`sessionStorage`,indexedDb:`IndexedDB`,cacheStorage:`Cache Storage`,serviceWorker:`Service Worker registration`,opfs:`Origin Private File System`};function _L(e){document.cookie=`${cL}=${e}; path=/; max-age=${3600*24*365}; SameSite=Lax`}function vL(e){return document.cookie.split(`; `).find(e=>e.startsWith(`${cL}=`))===`${cL}=${e}`}function yL(e){localStorage.setItem(cL,e)}function bL(e){return localStorage.getItem(cL)===e}function xL(e){sessionStorage.setItem(cL,e)}function SL(e){return sessionStorage.getItem(cL)===e}function CL(){return new Promise((e,t)=>{let n=indexedDB.open(lL,1);n.onupgradeneeded=()=>{n.result.createObjectStore(uL)},n.onsuccess=()=>e(n.result),n.onerror=()=>t(Error(`open failed (${n.error?.name||`unknown`}): ${n.error?.message||`no message`}`))})}async function wL(e){let t=await CL();try{await new Promise((n,r)=>{let i=t.transaction(uL,`readwrite`);i.objectStore(uL).put(e,cL),i.oncomplete=()=>n(),i.onerror=()=>r(Error(`write transaction failed.`))})}finally{t.close()}}async function TL(e){let t=await CL();try{return await new Promise((e,n)=>{let r=t.transaction(uL,`readonly`).objectStore(uL).get(cL);r.onsuccess=()=>e(r.result),r.onerror=()=>n(Error(`read failed.`))})===e}finally{t.close()}}async function EL(e){await(await caches.open(dL)).put(fL,new Response(e))}async function DL(e){let t=await(await caches.open(dL)).match(fL);return t!=null&&await t.text()===e}async function OL(){if(!(`serviceWorker`in navigator))throw Error(`Service workers are not supported in this browser.`);await navigator.serviceWorker.register(pL),await Promise.race([navigator.serviceWorker.ready,new Promise(e=>{setTimeout(e,5e3)})])}async function kL(){return`serviceWorker`in navigator?await navigator.serviceWorker.getRegistration()!=null:!1}async function AL(e){let t=await(await(await navigator.storage.getDirectory()).getFileHandle(mL,{create:!0})).createWritable();await t.write(e),await t.close()}async function jL(e){return await(await(await(await navigator.storage.getDirectory()).getFileHandle(mL)).getFile()).text()===e}var ML={cookie:{seed:_L,verify:vL},localStorage:{seed:yL,verify:bL},sessionStorage:{seed:xL,verify:SL},indexedDb:{seed:wL,verify:TL},cacheStorage:{seed:EL,verify:DL},serviceWorker:{seed:OL,verify:kL},opfs:{seed:AL,verify:jL}},NL=function(e){return e.Seed=`seed`,e.Verify=`verify`,e}({}),PL={seed:async(e,t)=>(await e.seed(t),!0),verify:(e,t)=>Promise.resolve(e.verify(t))};async function FL({mode:e,marker:t,mechanism:n}){try{let r=await PL[e](ML[n],t);return{mechanism:n,label:gL[n],ok:r,error:void 0}}catch(e){return{mechanism:n,label:gL[n],ok:!1,error:jy.isError(e)?e.message:`unknown error`}}}async function IL(){let e=navigator.storage,t=await e?.persisted().catch(()=>void 0),n=await e?.estimate().catch(()=>void 0);return{persistentStorage:t,quotaBytes:n?.quota,usageBytes:n?.usage}}async function LL({mode:e,marker:t}){let n=await Promise.all(Object.values(hL).map(n=>FL({mode:e,marker:t,mechanism:n})));return{mode:e,marker:t,environment:await IL(),reports:n}}function RL(e){let t=new URLSearchParams(e).get(`mode`);return Object.values(NL).find(e=>e===t)}function zL(e){return eM`
         <table>
             <thead>
                 <tr>
@@ -336,7 +336,7 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
             </tbody>
         </table>
         <pre class="json">${JSON.stringify(e,void 0,2)}</pre>
-    `}var LL=zj()({tagName:`vir-persistence-tests`,styles:Cj`
+    `}var BL=zj()({tagName:`vir-persistence-tests`,styles:Cj`
         :host {
             display: block;
         }
@@ -355,21 +355,21 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
             overflow: auto;
             background: ${$P.colors[`vira-grey-behind-fg-small-body`].background.value};
         }
-    `,state:()=>({status:`idle`,marker:new URLSearchParams(window.location.search).get(`marker`)||cF(),result:void 0}),init({state:e,updateState:t}){let n=FL(window.location.search);n&&(t({status:`running`}),PL({mode:n,marker:e.marker}).then(e=>{window.persistenceTestResult=e,document.title=`Data Persistence — ${n} complete`,t({status:`done`,result:e})}).catch(e=>{console.error(e),document.title=`Data Persistence — failed`,t({status:`done`})}))},render({state:e}){return eM`
+    `,state:()=>({status:`idle`,marker:new URLSearchParams(window.location.search).get(`marker`)||cF(),result:void 0}),init({state:e,updateState:t}){let n=RL(window.location.search);n&&(t({status:`running`}),LL({mode:n,marker:e.marker}).then(e=>{window.persistenceTestResult=e,document.title=`Data Persistence — ${n} complete`,t({status:`done`,result:e})}).catch(e=>{console.error(e),document.title=`Data Persistence — failed`,t({status:`done`})}))},render({state:e}){return eM`
             <h1>Data Persistence</h1>
             <p>
                 current marker:
                 <code>${e.marker}</code>
             </p>
             <nav>
-                <a href="?mode=${AL.Seed}&marker=${e.marker}">Run seed</a>
-                <a href="?mode=${AL.Verify}&marker=${e.marker}">Run verify</a>
+                <a href="?mode=${NL.Seed}&marker=${e.marker}">Run seed</a>
+                <a href="?mode=${NL.Verify}&marker=${e.marker}">Run verify</a>
             </nav>
             ${e.status===`running`?eM`
                       <p>Running…</p>
                   `:``}
-            ${e.result?IL(e.result):``}
-        `}});function RL(e){return eM`
+            ${e.result?zL(e.result):``}
+        `}});function VL(e){return eM`
         <table>
             <thead>
                 <tr>
@@ -393,7 +393,7 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
                         `)}
             </tbody>
         </table>
-    `}var zL=zj()({tagName:`vir-rebrowser-tests`,styles:Cj`
+    `}var HL=zj()({tagName:`vir-rebrowser-tests`,styles:Cj`
         :host {
             display: block;
         }
@@ -411,7 +411,7 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
         }
     `,state:()=>({detections:[]}),init({updateState:e}){NF(t=>{e({detections:t})})},render({state:e}){return eM`
             <h1>Automation Detection</h1>
-            ${RL(e.detections)}
+            ${VL(e.detections)}
         `}});zj()({tagName:`vir-app`,styles:Cj`
         :host {
             display: block;
@@ -435,9 +435,9 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
         }
     `,render(){return eM`
             <div class="panels">
-                <${LL}></${LL}>
-                <${zL}></${zL}>
-                <${iL}></${iL}>
+                <${BL}></${BL}>
+                <${HL}></${HL}>
+                <${sL}></${sL}>
                 <${cI}></${cI}>
             </div>
         `}});
