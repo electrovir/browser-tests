@@ -23,7 +23,7 @@
         "lint": "virmator lint fix",
         "start": "virmator frontend",
         "test": "virmator test web",
-        "test:all": "npm run compile && runstorm --names spelling,format,deps,lint \"npm run test:spelling\" \"npm run test:format\" \"npm run test:deps\" \"npm run test:lint\"",
+        "test:all": "npm run compile && runstorm --names spelling,format,deps,lint,tests \"npm run test:spelling\" \"npm run test:format\" \"npm run test:deps\" \"npm run test:lint\" \"npm test\"",
         "test:deps": "virmator deps check",
         "test:format": "virmator format check",
         "test:lint": "virmator lint",
