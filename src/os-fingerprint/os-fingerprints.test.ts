@@ -32,6 +32,13 @@ describe('os fingerprint detection', () => {
         const first = await computeAudioFingerprint();
         const second = await computeAudioFingerprint();
 
+        if (first == undefined) {
+            /** Some engines (Playwright's WebKit on Windows) expose no OfflineAudioContext. */
+            assert.isUndefined(second);
+            return;
+        }
+
+        assert.isDefined(second);
         assert.strictEquals(first.sampleCount, 5000);
         assert.isFinite(first.sum);
         assert.isAbove(first.sum, 0);

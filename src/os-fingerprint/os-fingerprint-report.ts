@@ -146,10 +146,10 @@ export async function runOsFingerprints(): Promise<OsFingerprintReport> {
         {
             type: OsFingerprintType.Audio,
             label: fingerprintLabels[OsFingerprintType.Audio],
-            detected: audio.sum.toFixed(4),
+            detected: audio == undefined ? 'none' : audio.sum.toFixed(4),
             expected: claimedSummary.audioSums.map((sum) => sum.toFixed(4)),
             verdict: classifyFingerprint({
-                live: audio.sum,
+                live: audio?.sum,
                 exactValues: filterMap(
                     exactObservations,
                     (observation) => observation.audioSum,
@@ -161,7 +161,8 @@ export async function runOsFingerprints(): Promise<OsFingerprintReport> {
                     (observation) => observation.audioSum,
                     check.isDefined,
                 ),
-                isMatch: (candidate) => Math.abs(candidate - audio.sum) <= audioMatchTolerance,
+                isMatch: (candidate) =>
+                    audio != undefined && Math.abs(candidate - audio.sum) <= audioMatchTolerance,
             }),
         },
         {

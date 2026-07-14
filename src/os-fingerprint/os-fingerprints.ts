@@ -273,7 +273,11 @@ const audioSampleRate = 44_100;
  * result is bit-stable within a browser build; Firefox is far from Chromium/WebKit, which sit close
  * together, so it separates engine families more than individual browsers.
  */
-export async function computeAudioFingerprint(): Promise<AudioFingerprintResult> {
+export async function computeAudioFingerprint(): Promise<AudioFingerprintResult | undefined> {
+    /** Some engines (e.g. Playwright's WebKit on Windows) expose no Web Audio API at all. */
+    if (!check.isFunction(globalThis.OfflineAudioContext)) {
+        return undefined;
+    }
     const context = new OfflineAudioContext(1, audioSampleCount, audioSampleRate);
     const oscillator = context.createOscillator();
     oscillator.type = 'triangle';

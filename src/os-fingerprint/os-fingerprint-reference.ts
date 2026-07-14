@@ -1,4 +1,4 @@
-// cspell:words libm
+// cspell:words libm ucrt
 
 import {check} from '@augment-vir/assert';
 import {filterMap} from '@augment-vir/common';
@@ -93,17 +93,28 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
     {
         os: 'Windows',
         browser: 'Chrome',
-        observations: [],
-    },
-    {
-        os: 'Windows',
-        browser: 'Safari',
-        observations: [],
+        observations: [
+            {
+                majorVersion: '149',
+                hyphenationDictionary: HyphenationDictionary.Minikin,
+                libmSignature: LibmSignature.Ucrt,
+                audioSum: 956.3164,
+                cpuArchitecture: CpuArchitecture.X86,
+            },
+        ],
     },
     {
         os: 'Windows',
         browser: 'Firefox',
-        observations: [],
+        observations: [
+            {
+                majorVersion: '151',
+                hyphenationDictionary: HyphenationDictionary.Bundled,
+                libmSignature: LibmSignature.Glibc,
+                audioSum: 766.5973,
+                cpuArchitecture: CpuArchitecture.X86,
+            },
+        ],
     },
     {
         os: 'Linux',
@@ -117,11 +128,6 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 cpuArchitecture: CpuArchitecture.X86,
             },
         ],
-    },
-    {
-        os: 'Linux',
-        browser: 'Safari',
-        observations: [],
     },
     {
         os: 'Linux',
