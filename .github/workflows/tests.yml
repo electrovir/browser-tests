@@ -26,7 +26,7 @@ jobs:
             - if: runner.os == 'Windows'
               shell: bash
               run: |
-                  npm i npm
+                  npm i npm@11.16.0
             # format package.json is to account for the above `npm i npm` command
             - name: run test
               shell: bash
