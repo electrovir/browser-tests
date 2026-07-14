@@ -62,9 +62,9 @@ export const botVerdictIcons: Record<BotVerdict, string> = {
 };
 
 export const botVerdictLabels: Record<BotVerdict, string> = {
-    [BotVerdict.Human]: 'not a bot',
-    [BotVerdict.Suspicious]: 'suspicious (weak signals)',
-    [BotVerdict.Bot]: 'bot detected',
+    [BotVerdict.Human]: 'Not a bot',
+    [BotVerdict.Suspicious]: 'Suspicious (weak signals)',
+    [BotVerdict.Bot]: 'Bot detected',
 };
 
 export type BotSignalResult = Readonly<{

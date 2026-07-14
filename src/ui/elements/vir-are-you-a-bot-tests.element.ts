@@ -7,7 +7,7 @@ import {
     type BotReport,
 } from '../../are-you-a-bot/are-you-a-bot-detections.js';
 import {detectionRatingIcons} from '../../rebrowser/rebrowser-detections.js';
-import {iconLabel} from './icon-label.js';
+import {iconLabel, iconLabelStyles} from './icon-label.js';
 import {testPanelStyles} from './shared-styles.js';
 
 function renderSignals(report: BotReport) {
@@ -15,9 +15,9 @@ function renderSignals(report: BotReport) {
         <table>
             <thead>
                 <tr>
-                    <th>signal</th>
-                    <th>result</th>
-                    <th>notes</th>
+                    <th>Signal</th>
+                    <th>Result</th>
+                    <th>Notes</th>
                 </tr>
             </thead>
             <tbody>
@@ -57,6 +57,7 @@ export const VirAreYouABotTests = defineElement()({
         }
 
         ${testPanelStyles}
+        ${iconLabelStyles}
 
         .verdict {
             margin-top: 16px;
@@ -92,7 +93,7 @@ export const VirAreYouABotTests = defineElement()({
         const report = state.report;
 
         return html`
-            <h1>are you a bot</h1>
+            <h1>Are You a Bot</h1>
             ${report
                 ? html`
                       <div class="verdict">

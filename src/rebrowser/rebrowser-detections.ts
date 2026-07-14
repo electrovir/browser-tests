@@ -61,8 +61,6 @@ export type RebrowserDetection = Readonly<{
     rating: DetectionRating;
     note: string;
     debug: string | undefined;
-    /** Milliseconds between page load and when this result was last updated. */
-    msSinceLoad: number;
 }>;
 
 export type DetectionInput = Readonly<{
@@ -635,7 +633,6 @@ export function startRebrowserDetections(onUpdate: RebrowserDetectionsListener):
     }
     detectionsController.isStarted = true;
 
-    const startTime = performance.now();
     const detectionsByType = new Map<RebrowserDetectionType, RebrowserDetection>();
     const runState = {
         isStopped: false,
@@ -657,7 +654,6 @@ export function startRebrowserDetections(onUpdate: RebrowserDetectionsListener):
             rating,
             note,
             debug,
-            msSinceLoad: Number((performance.now() - startTime).toFixed(3)),
         });
 
         const ordered = filterMap(

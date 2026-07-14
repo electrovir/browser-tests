@@ -1,30 +1,23 @@
 // cspell:words libm glibc ucrt minikin fdlibm libsystem tanh atob kansainvälistyminen constitutionalibus scrapfly spoofable aosp hyphenator
 
-import {assertWrap, check} from '@augment-vir/assert';
+import {check, checkWrap} from '@augment-vir/assert';
 import {getObjectTypedKeys} from '@augment-vir/common';
 import Bowser from 'bowser';
 
 /**
- * Side-channel OS/CPU fingerprints ported from the Scrapfly write-ups. Each one measures browser
- * behavior that reveals the real operating system, CPU architecture, or engine. The measurement is
- * then checked against a reference of what the browser + OS the user agent _claims_ should produce:
- * if the fingerprint belongs to a different browser + OS, the user agent is lying.
+ * Side-channel OS fingerprints ported from the Scrapfly write-ups. Each one measures browser
+ * behavior that reveals the real operating system or engine. The measurement is then checked
+ * against a reference of what the browser + OS the user agent _claims_ should produce: if the
+ * fingerprint belongs to a different browser + OS, the user agent is lying.
  *
  * - Hyphenation: https://scrapfly.dev/posts/browser-hyphenation-os-fingerprint/
  * - Math libm: https://scrapfly.dev/posts/browser-math-os-fingerprint/
  * - Audio: https://scrapfly.dev/posts/audio-fingerprint-math/
- * - WebAssembly CPU architecture: https://scrapfly.dev/posts/wasm-cpu-architecture-leak/
  */
 export enum OsFingerprintType {
     Hyphenation = 'hyphenation',
     MathLibm = 'mathLibm',
     Audio = 'audio',
-    CpuArchitecture = 'cpuArchitecture',
-}
-
-export enum CpuArchitecture {
-    X86 = 'x86',
-    Arm = 'arm',
 }
 
 /** The source of a browser's hyphenation dictionaries. */
@@ -51,17 +44,20 @@ export enum LibmSignature {
     Ucrt = 'ucrt',
 }
 
+/** CPU instruction-set family, the axis the audio fingerprint actually varies along. */
+export enum CpuArchitecture {
+    /** Apple Silicon and other ARM machines. Matches the UA client-hint `architecture: 'arm'`. */
+    Arm = 'arm',
+    /** Intel and AMD machines. Matches the UA client-hint `architecture: 'x86'` (32- and 64-bit). */
+    X86 = 'x86',
+}
+
 /** How a live fingerprint compares to the reference for the browser + OS the user agent claims. */
 export enum FingerprintVerdict {
-    /** The live value is a known value for the claimed browser + OS. */
+    /** The live value is one the claimed browser + OS is known to produce (any captured version). */
     Match = 'match',
-    /** The live value is a known value for a _different_ browser + OS: the user agent is lying. */
+    /** The live value is not one the claimed browser + OS produces: the user agent is lying. */
     Mismatch = 'mismatch',
-    /**
-     * The live value is in no reference set, so it can neither be confirmed nor proven a lie — most
-     * likely a browser version we have not captured yet.
-     */
-    Unverified = 'unverified',
     /** No reference has been captured for the claimed browser + OS, so there is nothing to compare. */
     NoReference = 'noReference',
 }
@@ -69,14 +65,12 @@ export enum FingerprintVerdict {
 export const fingerprintVerdictIcons: Record<FingerprintVerdict, string> = {
     [FingerprintVerdict.Match]: '🟢',
     [FingerprintVerdict.Mismatch]: '🔴',
-    [FingerprintVerdict.Unverified]: '🟡',
     [FingerprintVerdict.NoReference]: '⚪️',
 };
 
 export const fingerprintVerdictLabels: Record<FingerprintVerdict, string> = {
     [FingerprintVerdict.Match]: 'match',
     [FingerprintVerdict.Mismatch]: 'mismatch',
-    [FingerprintVerdict.Unverified]: 'unverified (no reference for this browser version)',
     [FingerprintVerdict.NoReference]: 'no reference',
 };
 
@@ -260,13 +254,25 @@ export function detectMathLibm(): MathLibmResult {
 }
 
 export type AudioFingerprintResult = Readonly<{
-    /** Sum of absolute rendered sample values. Deterministic per engine + CPU architecture. */
+    /** Sum of absolute rendered sample values. Deterministic per engine + platform. */
     sum: number;
     sampleCount: number;
 }>;
 
 const audioSampleCount = 5000;
 const audioSampleRate = 44_100;
+
+/** Browsers that add per-session noise to the audio render, making its sum unusable as a signal. */
+const audioRandomizingBrowsers: ReadonlyArray<string> = ['Safari'];
+
+/**
+ * Whether the browser randomizes its audio fingerprint. Safari re-seeds the noise every session, so
+ * the same machine produces a different sum on each page load and the audio signal must be
+ * ignored.
+ */
+export function browserRandomizesAudio(browserName: string | undefined): boolean {
+    return browserName != undefined && audioRandomizingBrowsers.includes(browserName);
+}
 
 /**
  * Renders a triangle oscillator through a dynamics compressor offline and sums the output. The
@@ -299,68 +305,34 @@ export async function computeAudioFingerprint(): Promise<AudioFingerprintResult 
     };
 }
 
-export type CpuArchitectureResult = Readonly<{
-    /** NaN sign bit read from a WebAssembly module's linear memory, or undefined if it failed. */
-    wasmSignBit: number | undefined;
-    /** NaN sign bit read from a plain-JS `0 / 0` through a typed-array alias. */
-    jsSignBit: number;
-    detected: CpuArchitecture;
-    /**
-     * True when the WASM and JS probes agree. They legitimately differ on some engines (e.g.
-     * Firefox) that canonicalize the NaN sign bit for plain-JS `0 / 0`, which is why the WASM probe
-     * is the authoritative source.
-     */
-    probesAgree: boolean;
+/** Chromium's UA client-hints accessor; absent on Safari and Firefox and from the DOM lib types. */
+type NavigatorUserAgentData = Readonly<{
+    getHighEntropyValues: (
+        hints: ReadonlyArray<string>,
+    ) => Promise<Readonly<{architecture?: string | undefined}>>;
 }>;
 
-/**
- * A tiny WebAssembly module exporting `(func "sign" (param f64) (result i32))` that computes `x /
- * x`, stores the f64 result into linear memory, and returns the sign bit of its high 32-bit word.
- * Calling it with 0 produces 0/0, whose NaN sign bit the CPU chooses: 1 on x86, 0 on ARM. Reading
- * the raw bytes out of linear memory sidesteps NaN canonicalization at the WASM/JS boundary.
- */
-const cpuArchitectureWasmBase64 =
-    'AGFzbQEAAAABBgFgAXwBfwMCAQAFAwEAAQcIAQRzaWduAAAKFgEUAEEAIAAgAKM5AwBBBCgCAEEfdgs=';
-
-function readWasmNanSignBit(): number | undefined {
-    try {
-        const bytes = Uint8Array.from(
-            atob(cpuArchitectureWasmBase64),
-            (character) => character.codePointAt(0) ?? 0,
-        );
-        const signExport = new WebAssembly.Instance(new WebAssembly.Module(bytes)).exports.sign;
-        if (!check.isFunction(signExport)) {
-            return undefined;
-        }
-        return (signExport as (value: number) => number)(0);
-    } catch {
+function getNavigatorUserAgentData(): NavigatorUserAgentData | undefined {
+    const candidate: unknown = Reflect.get(navigator, 'userAgentData');
+    if (!check.isObject(candidate)) {
         return undefined;
     }
+    return check.isFunction(Reflect.get(candidate, 'getHighEntropyValues'))
+        ? (candidate satisfies object as NavigatorUserAgentData)
+        : undefined;
 }
 
-function readJsNanSignBit(): number {
-    const zeroHolder = new Float64Array(1);
-    zeroHolder[0] = 0;
-    /** Reading the zeros back through the array stops the optimizer from constant-folding `0 / 0`. */
-    const numerator = assertWrap.isNumber(zeroHolder[0]);
-    const denominator = assertWrap.isNumber(zeroHolder[0]);
-    const nanBits = new Float64Array([numerator / denominator]);
-    /** Index 1 is the high 32-bit word on little-endian CPUs (both x86-64 and arm64). */
-    const highWord = assertWrap.isNumber(new Uint32Array(nanBits.buffer)[1]);
-    return highWord >>> 31;
-}
-
-function architectureFromSignBit(signBit: number): CpuArchitecture {
-    return signBit === 1 ? CpuArchitecture.X86 : CpuArchitecture.Arm;
-}
-
-export function detectCpuArchitecture(): CpuArchitectureResult {
-    const wasmSignBit = readWasmNanSignBit();
-    const jsSignBit = readJsNanSignBit();
-    return {
-        wasmSignBit,
-        jsSignBit,
-        detected: architectureFromSignBit(wasmSignBit ?? jsSignBit),
-        probesAgree: wasmSignBit == undefined || wasmSignBit === jsSignBit,
-    };
+/**
+ * The audio fingerprint varies with CPU architecture (vector-math rounding differs on ARM vs x86),
+ * so an audio sum is only meaningful alongside the architecture it was produced on. Only Chromium
+ * exposes the architecture (via UA client hints); Safari and Firefox return undefined, and the
+ * report then falls back to matching audio across every architecture for those.
+ */
+export async function detectCpuArch(): Promise<CpuArchitecture | undefined> {
+    const userAgentData = getNavigatorUserAgentData();
+    if (!userAgentData) {
+        return undefined;
+    }
+    const highEntropyValues = await userAgentData.getHighEntropyValues(['architecture']);
+    return checkWrap.isEnumValue(highEntropyValues.architecture, CpuArchitecture);
 }

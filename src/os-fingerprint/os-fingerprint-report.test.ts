@@ -1,7 +1,16 @@
-import {assert} from '@augment-vir/assert';
+// cspell:words libm
+
+import {assert, assertWrap} from '@augment-vir/assert';
 import {describe, it} from '@augment-vir/test';
-import {classifyFingerprint, runOsFingerprints} from './os-fingerprint-report.js';
-import {FingerprintVerdict, HyphenationDictionary} from './os-fingerprints.js';
+import {classifyFingerprint, guessActualCombo, runOsFingerprints} from './os-fingerprint-report.js';
+import {
+    browserRandomizesAudio,
+    CpuArchitecture,
+    FingerprintVerdict,
+    HyphenationDictionary,
+    LibmSignature,
+    OsFingerprintType,
+} from './os-fingerprints.js';
 
 describe('os fingerprint report', () => {
     /**
@@ -36,45 +45,56 @@ describe('os fingerprint report', () => {
         });
     });
 
-    it('classifies a value against the versioned reference', () => {
-        const allKnown = [
-            HyphenationDictionary.Apple,
-            HyphenationDictionary.Minikin,
-            HyphenationDictionary.Bundled,
-        ];
+    it('marks a randomized audio signal as no-reference, never a mismatch', async () => {
+        const report = await runOsFingerprints();
+        const audioComparison = assertWrap.isDefined(
+            report.comparisons.find((comparison) => comparison.type === OsFingerprintType.Audio),
+        );
 
-        /** An observation of the exact claimed version produces this value → confirmed match. */
+        /**
+         * Safari re-seeds its audio noise every session (the harness runs it via Playwright's
+         * WebKit, which reports a Safari user agent), so audio is never comparable there. Every
+         * other engine has a stable audio sum and must not be marked randomized.
+         */
+        assert.strictEquals(
+            audioComparison.randomized,
+            browserRandomizesAudio(report.groundTruth.browserName),
+        );
+        if (audioComparison.randomized) {
+            /** Randomized audio has nothing to compare against, so its verdict is no-reference. */
+            assert.strictEquals(audioComparison.verdict, FingerprintVerdict.NoReference);
+        }
+        /** A real, unaltered browser must never be flagged, randomized audio or not. */
+        assert.notStrictEquals(audioComparison.verdict, FingerprintVerdict.Mismatch);
+    });
+
+    it('classifies a value against every known value for the browser + os', () => {
+        /** A value the claimed browser + OS produces → match, even without an exact-version row. */
         assert.strictEquals(
             classifyFingerprint({
                 live: HyphenationDictionary.Apple,
-                exactValues: [HyphenationDictionary.Apple],
-                anyValues: [HyphenationDictionary.Apple],
-                allKnown,
+                claimedValues: [HyphenationDictionary.Apple],
                 isMatch: (candidate) => candidate === HyphenationDictionary.Apple,
             }),
             FingerprintVerdict.Match,
         );
 
-        /** Known for the browser but no observation for this exact version → unverified. */
-        assert.strictEquals(
-            classifyFingerprint({
-                live: HyphenationDictionary.Apple,
-                exactValues: [],
-                anyValues: [HyphenationDictionary.Apple],
-                allKnown,
-                isMatch: (candidate) => candidate === HyphenationDictionary.Apple,
-            }),
-            FingerprintVerdict.Unverified,
-        );
-
-        /** The value belongs only to a different browser + OS → the user agent is lying. */
+        /** A value the claimed browser + OS never produces → the user agent is lying. */
         assert.strictEquals(
             classifyFingerprint({
                 live: HyphenationDictionary.Minikin,
-                exactValues: [HyphenationDictionary.Apple],
-                anyValues: [HyphenationDictionary.Apple],
-                allKnown,
+                claimedValues: [HyphenationDictionary.Apple],
                 isMatch: (candidate) => candidate === HyphenationDictionary.Minikin,
+            }),
+            FingerprintVerdict.Mismatch,
+        );
+
+        /** Nothing detected while the claimed browser + OS does produce a value → also a lie. */
+        assert.strictEquals(
+            classifyFingerprint({
+                live: undefined,
+                claimedValues: [HyphenationDictionary.Apple],
+                isMatch: () => false,
             }),
             FingerprintVerdict.Mismatch,
         );
@@ -83,12 +103,30 @@ describe('os fingerprint report', () => {
         assert.strictEquals(
             classifyFingerprint({
                 live: HyphenationDictionary.Apple,
-                exactValues: [],
-                anyValues: [],
-                allKnown,
+                claimedValues: [],
                 isMatch: (candidate) => candidate === HyphenationDictionary.Apple,
             }),
             FingerprintVerdict.NoReference,
+        );
+    });
+
+    it('guesses the real browser + os behind a spoofed user agent', () => {
+        /**
+         * Linux Chrome fingerprints while claiming macOS Chrome → the guess should name Linux
+         * Chrome.
+         */
+        assert.strictEquals(
+            guessActualCombo({
+                detected: {
+                    cpuArch: CpuArchitecture.X86,
+                    hyphenation: HyphenationDictionary.Minikin,
+                    libm: LibmSignature.Glibc,
+                    audio: 956.3164,
+                },
+                claimedOsName: 'macOS',
+                claimedBrowserName: 'Chrome',
+            }),
+            'Linux Chrome',
         );
     });
 });

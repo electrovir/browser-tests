@@ -6,20 +6,21 @@ import {CpuArchitecture, HyphenationDictionary, LibmSignature} from './os-finger
 
 /** One captured fingerprint from a specific browser build. */
 export type FingerprintObservation = Readonly<{
-    /** Browser major version this was captured on (e.g. '149'); used only to match, never shown. */
+    /** Browser major version this was captured on (e.g. '149'); documentation only. */
     majorVersion: string;
+    /** The CPU architecture this was captured on. Only the audio sum depends on it. */
+    cpuArch: CpuArchitecture | undefined;
     hyphenationDictionary: HyphenationDictionary | undefined;
     libmSignature: LibmSignature | undefined;
     audioSum: number | undefined;
-    cpuArchitecture: CpuArchitecture | undefined;
 }>;
 
 /**
  * A reference of the fingerprints each OS + browser is known to produce, stored as one observation
- * per captured browser build. Keeping the version lets an exactly-known version be compared
- * exactly; a value seen for the browser but not for that exact version stays a soft (not failing)
- * result. Fill placeholder combos in from the `OS_FINGERPRINT_DATA` lines the tests print in the
- * GitHub Actions logs by adding an observation.
+ * per captured browser build. A live value is compared against every value the OS + browser is
+ * known to produce across all captured versions, so the exact version need not be present. Fill
+ * placeholder combos in from the `OS_FINGERPRINT_DATA` lines the tests print in the GitHub Actions
+ * logs by adding an observation.
  */
 export type FingerprintReferenceEntry = Readonly<{
     /** Bowser `os.name`. */
@@ -36,17 +37,17 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
         observations: [
             {
                 majorVersion: '140',
+                cpuArch: CpuArchitecture.Arm,
                 hyphenationDictionary: HyphenationDictionary.Apple,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 956.316634,
-                cpuArchitecture: CpuArchitecture.Arm,
             },
             {
                 majorVersion: '149',
+                cpuArch: CpuArchitecture.Arm,
                 hyphenationDictionary: HyphenationDictionary.Apple,
                 libmSignature: LibmSignature.AppleLibm,
                 audioSum: 956.3166342371878,
-                cpuArchitecture: CpuArchitecture.Arm,
             },
         ],
     },
@@ -55,18 +56,15 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
         browser: 'Safari',
         observations: [
             {
+                /**
+                 * Safari re-seeds its audio noise every session, so its audio sum is randomized and
+                 * left unset; hyphenation and libm remain stable, usable signals.
+                 */
                 majorVersion: '26',
+                cpuArch: CpuArchitecture.Arm,
                 hyphenationDictionary: HyphenationDictionary.Apple,
                 libmSignature: LibmSignature.AppleLibm,
-                audioSum: 956.762599,
-                cpuArchitecture: CpuArchitecture.Arm,
-            },
-            {
-                majorVersion: '26',
-                hyphenationDictionary: HyphenationDictionary.Apple,
-                libmSignature: LibmSignature.AppleLibm,
-                audioSum: 956.3167136899606,
-                cpuArchitecture: CpuArchitecture.Arm,
+                audioSum: undefined,
             },
         ],
     },
@@ -76,17 +74,17 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
         observations: [
             {
                 majorVersion: '148',
+                cpuArch: CpuArchitecture.Arm,
                 hyphenationDictionary: HyphenationDictionary.Bundled,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 766.597307,
-                cpuArchitecture: CpuArchitecture.Arm,
             },
             {
                 majorVersion: '151',
+                cpuArch: CpuArchitecture.Arm,
                 hyphenationDictionary: HyphenationDictionary.Bundled,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 766.5973066808656,
-                cpuArchitecture: CpuArchitecture.Arm,
             },
         ],
     },
@@ -96,10 +94,10 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
         observations: [
             {
                 majorVersion: '149',
+                cpuArch: CpuArchitecture.X86,
                 hyphenationDictionary: HyphenationDictionary.Minikin,
                 libmSignature: LibmSignature.Ucrt,
                 audioSum: 956.3164,
-                cpuArchitecture: CpuArchitecture.X86,
             },
         ],
     },
@@ -109,10 +107,10 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
         observations: [
             {
                 majorVersion: '151',
+                cpuArch: CpuArchitecture.X86,
                 hyphenationDictionary: HyphenationDictionary.Bundled,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 766.5973,
-                cpuArchitecture: CpuArchitecture.X86,
             },
         ],
     },
@@ -122,10 +120,10 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
         observations: [
             {
                 majorVersion: '149',
+                cpuArch: CpuArchitecture.X86,
                 hyphenationDictionary: HyphenationDictionary.Minikin,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 956.3164,
-                cpuArchitecture: CpuArchitecture.X86,
             },
         ],
     },
@@ -135,10 +133,10 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
         observations: [
             {
                 majorVersion: '151',
+                cpuArch: CpuArchitecture.X86,
                 hyphenationDictionary: HyphenationDictionary.Bundled,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 766.5973,
-                cpuArchitecture: CpuArchitecture.X86,
             },
         ],
     },
@@ -150,16 +148,19 @@ function unique<Value>(values: ReadonlyArray<Value>): ReadonlyArray<Value> {
 
 /** The distinct value each field takes across a set of observations, for display and matching. */
 export type FingerprintFieldValues = Readonly<{
+    cpuArchitectures: ReadonlyArray<CpuArchitecture>;
     hyphenationDictionaries: ReadonlyArray<HyphenationDictionary>;
     libmSignatures: ReadonlyArray<LibmSignature>;
     audioSums: ReadonlyArray<number>;
-    cpuArchitectures: ReadonlyArray<CpuArchitecture>;
 }>;
 
 export function summarizeObservations(
     observations: ReadonlyArray<FingerprintObservation>,
 ): FingerprintFieldValues {
     return {
+        cpuArchitectures: unique(
+            filterMap(observations, (observation) => observation.cpuArch, check.isDefined),
+        ),
         hyphenationDictionaries: unique(
             filterMap(
                 observations,
@@ -173,8 +174,27 @@ export function summarizeObservations(
         audioSums: unique(
             filterMap(observations, (observation) => observation.audioSum, check.isDefined),
         ),
-        cpuArchitectures: unique(
-            filterMap(observations, (observation) => observation.cpuArchitecture, check.isDefined),
-        ),
     };
+}
+
+/**
+ * The audio sums the observations produced on a given CPU architecture. Audio varies with
+ * architecture, so a live audio sum must only be compared against sums captured on the same one.
+ * When the architecture is unknown (Safari and Firefox expose none), every captured sum is returned
+ * so nothing is falsely flagged.
+ */
+export function audioSumsForArch({
+    observations,
+    cpuArch,
+}: Readonly<{
+    observations: ReadonlyArray<FingerprintObservation>;
+    cpuArch: CpuArchitecture | undefined;
+}>): ReadonlyArray<number> {
+    const scopedObservations =
+        cpuArch == undefined
+            ? observations
+            : observations.filter((observation) => observation.cpuArch === cpuArch);
+    return unique(
+        filterMap(scopedObservations, (observation) => observation.audioSum, check.isDefined),
+    );
 }

@@ -5,7 +5,7 @@ import {
     startRebrowserDetections,
     type RebrowserDetection,
 } from '../../rebrowser/rebrowser-detections.js';
-import {iconLabel} from './icon-label.js';
+import {iconLabel, iconLabelStyles} from './icon-label.js';
 import {testPanelStyles} from './shared-styles.js';
 
 function renderRebrowserDetections(detections: ReadonlyArray<RebrowserDetection>) {
@@ -13,9 +13,8 @@ function renderRebrowserDetections(detections: ReadonlyArray<RebrowserDetection>
         <table>
             <thead>
                 <tr>
-                    <th>test</th>
-                    <th>time</th>
-                    <th>notes</th>
+                    <th>Test</th>
+                    <th>Notes</th>
                 </tr>
             </thead>
             <tbody>
@@ -30,7 +29,6 @@ function renderRebrowserDetections(detections: ReadonlyArray<RebrowserDetection>
                                         label: detection.type,
                                     })}
                                 </td>
-                                <td>${detection.msSinceLoad} ms</td>
                                 <td>
                                     ${detection.note}
                                     ${detection.debug
@@ -55,6 +53,7 @@ export const VirRebrowserTests = defineElement()({
         }
 
         ${testPanelStyles}
+        ${iconLabelStyles}
 
         .debug {
             margin: 4px 0 0;
@@ -79,7 +78,7 @@ export const VirRebrowserTests = defineElement()({
     },
     render({state}) {
         return html`
-            <h1>rebrowser bot detection</h1>
+            <h1>Playwright Bot Detection</h1>
             <p>
                 The tests run continuously; some only resolve once an automation tool triggers them.
                 The latest results are also written to

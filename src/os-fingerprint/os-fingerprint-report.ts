@@ -3,19 +3,24 @@
 import {check} from '@augment-vir/assert';
 import {filterMap} from '@augment-vir/common';
 import {
+    audioSumsForArch,
     osFingerprintReference,
     summarizeObservations,
     type FingerprintReferenceEntry,
 } from './os-fingerprint-reference.js';
 import {
+    browserRandomizesAudio,
     computeAudioFingerprint,
-    detectCpuArchitecture,
+    detectCpuArch,
     detectHyphenationDictionary,
     detectMathLibm,
     FingerprintVerdict,
     getBrowserGroundTruth,
     OsFingerprintType,
     type BrowserGroundTruth,
+    type CpuArchitecture,
+    type HyphenationDictionary,
+    type LibmSignature,
 } from './os-fingerprints.js';
 
 export type FingerprintComparison = Readonly<{
@@ -25,61 +30,148 @@ export type FingerprintComparison = Readonly<{
     detected: string;
     /** Every value the claimed browser + OS is known to produce, as display strings. */
     expected: ReadonlyArray<string>;
+    /** The browser randomizes this signal (Safari audio), so there is no value to expect. */
+    randomized: boolean;
     verdict: FingerprintVerdict;
 }>;
 
 export type OsFingerprintReport = Readonly<{
     groundTruth: BrowserGroundTruth;
+    /** The live CPU architecture, when the engine exposes it (Chromium only). */
+    detectedCpuArch: CpuArchitecture | undefined;
     /** The reference row for the browser + OS the user agent claims, if it has been captured. */
     claimedReference: FingerprintReferenceEntry | undefined;
     comparisons: ReadonlyArray<FingerprintComparison>;
+    /** When something mismatches, the browser + OS the measured fingerprints most resemble. */
+    actualGuess: string | undefined;
 }>;
 
 const fingerprintLabels: Record<OsFingerprintType, string> = {
     [OsFingerprintType.Hyphenation]: 'hyphenation dictionary',
     [OsFingerprintType.MathLibm]: 'math libm signature',
     [OsFingerprintType.Audio]: 'audio fingerprint',
-    [OsFingerprintType.CpuArchitecture]: 'cpu architecture',
 };
 
 /**
- * Audio sums drift slightly by browser build, so compare within a window that still separates
- * engines.
+ * Audio sums are bit-stable within a browser build on a given CPU architecture. A live sum is only
+ * ever compared against same-architecture references, so this window just needs to absorb
+ * stored-precision rounding (sums are stored to four decimals) and minor cross-version jitter while
+ * still separating engine families (Firefox ~766 vs Chromium/WebKit ~956).
  */
-const audioMatchTolerance = 50;
+const audioMatchTolerance = 0.0001;
 
 /**
- * Classifies a live value against the reference for the claimed browser + OS:
+ * Weights for the actual-combo guess. Audio and hyphenation pin down the OS far more strongly than
+ * the libm signature (glibc is shared by Linux and every Firefox), so they count for more.
+ */
+const guessWeights = {
+    hyphenation: 2,
+    audio: 2,
+    libm: 1,
+};
+
+/**
+ * Classifies a live value against every value the claimed browser + OS is known to produce, across
+ * all captured versions (the exact version need not be in the reference):
  *
- * - Matches an observation of the _exact_ claimed browser version → confirmed match.
- * - Matches an observation of the claimed browser at some _other_ version → consistent, but we have
- *   no reference for this exact version, so it stays unverified rather than a confident match.
- * - Matches only a _different_ browser + OS → the value belongs elsewhere, so the UA is lying.
- * - Matches nothing (or no live value / uncaptured combo) → nothing to confirm against.
+ * - Matches a value the claimed browser + OS produces → match.
+ * - Detected, but not a value the claimed browser + OS produces → the user agent is lying.
+ * - No live value, yet the claimed browser + OS does produce one → also a lie.
+ * - No reference captured for the claimed browser + OS → nothing to compare.
  */
 export function classifyFingerprint<Value>({
     live,
-    exactValues,
-    anyValues,
-    allKnown,
+    claimedValues,
     isMatch,
 }: Readonly<{
     live: Value | undefined;
-    exactValues: ReadonlyArray<Value>;
-    anyValues: ReadonlyArray<Value>;
-    allKnown: ReadonlyArray<Value>;
+    claimedValues: ReadonlyArray<Value>;
     isMatch: (candidate: Value) => boolean;
 }>): FingerprintVerdict {
-    if (live == undefined || anyValues.length === 0) {
+    if (claimedValues.length === 0) {
         return FingerprintVerdict.NoReference;
-    } else if (exactValues.some(isMatch)) {
+    } else if (live != undefined && claimedValues.some(isMatch)) {
         return FingerprintVerdict.Match;
-    } else if (anyValues.some(isMatch)) {
-        return FingerprintVerdict.Unverified;
-    } else if (allKnown.some(isMatch)) {
-        return FingerprintVerdict.Mismatch;
     }
-    return FingerprintVerdict.Unverified;
+    return FingerprintVerdict.Mismatch;
+}
+
+export type DetectedFingerprints = Readonly<{
+    cpuArch: CpuArchitecture | undefined;
+    hyphenation: HyphenationDictionary | undefined;
+    libm: LibmSignature | undefined;
+    audio: number | undefined;
+}>;
+
+function audioMatches({candidate, live}: Readonly<{candidate: number; live: number}>): boolean {
+    return Math.abs(candidate - live) <= audioMatchTolerance;
+}
+
+function scoreEntryAgainstDetected({
+    entry,
+    detected,
+}: Readonly<{entry: FingerprintReferenceEntry; detected: DetectedFingerprints}>): number {
+    const summary = summarizeObservations(entry.observations);
+    const liveAudio = detected.audio;
+    const scopedAudioSums = audioSumsForArch({
+        observations: entry.observations,
+        cpuArch: detected.cpuArch,
+    });
+    const weightedMatches: ReadonlyArray<number> = [
+        detected.hyphenation != undefined &&
+        summary.hyphenationDictionaries.includes(detected.hyphenation)
+            ? guessWeights.hyphenation
+            : 0,
+        detected.libm != undefined && summary.libmSignatures.includes(detected.libm)
+            ? guessWeights.libm
+            : 0,
+        liveAudio != undefined &&
+        scopedAudioSums.some((sum) =>
+            audioMatches({
+                candidate: sum,
+                live: liveAudio,
+            }),
+        )
+            ? guessWeights.audio
+            : 0,
+    ];
+    return weightedMatches.reduce((total, weight) => total + weight, 0);
+}
+
+/**
+ * Finds the browser + OS (other than the one claimed) whose known fingerprints best match what was
+ * actually measured, so a spoofed user agent can be told what it really looks like.
+ */
+export function guessActualCombo({
+    detected,
+    claimedOsName,
+    claimedBrowserName,
+}: Readonly<{
+    detected: DetectedFingerprints;
+    claimedOsName: string | undefined;
+    claimedBrowserName: string | undefined;
+}>): string | undefined {
+    const scored = filterMap(
+        osFingerprintReference,
+        (entry) => {
+            const isClaimed = entry.os === claimedOsName && entry.browser === claimedBrowserName;
+            const score = isClaimed
+                ? 0
+                : scoreEntryAgainstDetected({
+                      entry,
+                      detected,
+                  });
+            return score > 0
+                ? {
+                      entry,
+                      score,
+                  }
+                : undefined;
+        },
+        check.isDefined,
+    );
+    const best = scored.toSorted((first, second) => second.score - first.score)[0];
+    return best ? `${best.entry.os} ${best.entry.browser}` : undefined;
 }
 
 export async function runOsFingerprints(): Promise<OsFingerprintReport> {
@@ -87,18 +179,20 @@ export async function runOsFingerprints(): Promise<OsFingerprintReport> {
     const claimedReference = osFingerprintReference.find(
         (entry) => entry.os === groundTruth.osName && entry.browser === groundTruth.browserName,
     );
-    const claimedObservations = claimedReference?.observations ?? [];
-    const liveMajorVersion = groundTruth.browserVersion?.split('.')[0];
-    const exactObservations = claimedObservations.filter(
-        (observation) => observation.majorVersion === liveMajorVersion,
-    );
-    const allObservations = osFingerprintReference.flatMap((entry) => entry.observations);
-    const claimedSummary = summarizeObservations(claimedObservations);
+    const claimedSummary = summarizeObservations(claimedReference?.observations ?? []);
 
+    const detectedCpuArch = await detectCpuArch();
     const hyphenation = detectHyphenationDictionary();
     const mathLibm = detectMathLibm();
     const audio = await computeAudioFingerprint();
-    const cpuArchitecture = detectCpuArchitecture();
+    /** Safari re-seeds its audio noise every session, so its audio sum is not comparable at all. */
+    const audioRandomized = browserRandomizesAudio(groundTruth.browserName);
+
+    /** Audio depends on CPU architecture, so it is only compared against same-architecture sums. */
+    const claimedAudioSums = audioSumsForArch({
+        observations: claimedReference?.observations ?? [],
+        cpuArch: detectedCpuArch,
+    });
 
     const comparisons: ReadonlyArray<FingerprintComparison> = [
         {
@@ -106,19 +200,10 @@ export async function runOsFingerprints(): Promise<OsFingerprintReport> {
             label: fingerprintLabels[OsFingerprintType.Hyphenation],
             detected: hyphenation.detected ?? 'none',
             expected: claimedSummary.hyphenationDictionaries,
+            randomized: false,
             verdict: classifyFingerprint({
                 live: hyphenation.detected,
-                exactValues: filterMap(
-                    exactObservations,
-                    (observation) => observation.hyphenationDictionary,
-                    check.isDefined,
-                ),
-                anyValues: claimedSummary.hyphenationDictionaries,
-                allKnown: filterMap(
-                    allObservations,
-                    (observation) => observation.hyphenationDictionary,
-                    check.isDefined,
-                ),
+                claimedValues: claimedSummary.hyphenationDictionaries,
                 isMatch: (candidate) => candidate === hyphenation.detected,
             }),
         },
@@ -127,19 +212,10 @@ export async function runOsFingerprints(): Promise<OsFingerprintReport> {
             label: fingerprintLabels[OsFingerprintType.MathLibm],
             detected: mathLibm.detected ?? 'none',
             expected: claimedSummary.libmSignatures,
+            randomized: false,
             verdict: classifyFingerprint({
                 live: mathLibm.detected,
-                exactValues: filterMap(
-                    exactObservations,
-                    (observation) => observation.libmSignature,
-                    check.isDefined,
-                ),
-                anyValues: claimedSummary.libmSignatures,
-                allKnown: filterMap(
-                    allObservations,
-                    (observation) => observation.libmSignature,
-                    check.isDefined,
-                ),
+                claimedValues: claimedSummary.libmSignatures,
                 isMatch: (candidate) => candidate === mathLibm.detected,
             }),
         },
@@ -147,50 +223,45 @@ export async function runOsFingerprints(): Promise<OsFingerprintReport> {
             type: OsFingerprintType.Audio,
             label: fingerprintLabels[OsFingerprintType.Audio],
             detected: audio == undefined ? 'none' : audio.sum.toFixed(4),
-            expected: claimedSummary.audioSums.map((sum) => sum.toFixed(4)),
-            verdict: classifyFingerprint({
-                live: audio?.sum,
-                exactValues: filterMap(
-                    exactObservations,
-                    (observation) => observation.audioSum,
-                    check.isDefined,
-                ),
-                anyValues: claimedSummary.audioSums,
-                allKnown: filterMap(
-                    allObservations,
-                    (observation) => observation.audioSum,
-                    check.isDefined,
-                ),
-                isMatch: (candidate) =>
-                    audio != undefined && Math.abs(candidate - audio.sum) <= audioMatchTolerance,
-            }),
-        },
-        {
-            type: OsFingerprintType.CpuArchitecture,
-            label: fingerprintLabels[OsFingerprintType.CpuArchitecture],
-            detected: cpuArchitecture.detected,
-            expected: claimedSummary.cpuArchitectures,
-            verdict: classifyFingerprint({
-                live: cpuArchitecture.detected,
-                exactValues: filterMap(
-                    exactObservations,
-                    (observation) => observation.cpuArchitecture,
-                    check.isDefined,
-                ),
-                anyValues: claimedSummary.cpuArchitectures,
-                allKnown: filterMap(
-                    allObservations,
-                    (observation) => observation.cpuArchitecture,
-                    check.isDefined,
-                ),
-                isMatch: (candidate) => candidate === cpuArchitecture.detected,
-            }),
+            expected: claimedAudioSums.map((sum) => sum.toFixed(4)),
+            randomized: audioRandomized,
+            /** Randomized audio has nothing stable to reference, so it is never comparable. */
+            verdict: audioRandomized
+                ? FingerprintVerdict.NoReference
+                : classifyFingerprint({
+                      live: audio?.sum,
+                      claimedValues: claimedAudioSums,
+                      isMatch: (candidate) =>
+                          audio != undefined &&
+                          audioMatches({
+                              candidate,
+                              live: audio.sum,
+                          }),
+                  }),
         },
     ];
 
+    const hasMismatch = comparisons.some(
+        (comparison) => comparison.verdict === FingerprintVerdict.Mismatch,
+    );
+    const actualGuess = hasMismatch
+        ? guessActualCombo({
+              detected: {
+                  cpuArch: detectedCpuArch,
+                  hyphenation: hyphenation.detected,
+                  libm: mathLibm.detected,
+                  audio: audioRandomized ? undefined : audio?.sum,
+              },
+              claimedOsName: groundTruth.osName,
+              claimedBrowserName: groundTruth.browserName,
+          })
+        : undefined;
+
     return {
         groundTruth,
+        detectedCpuArch,
         claimedReference,
         comparisons,
+        actualGuess,
     };
 }
