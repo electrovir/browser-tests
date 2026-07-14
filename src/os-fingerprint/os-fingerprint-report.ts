@@ -15,6 +15,7 @@ import {
     detectHyphenationDictionary,
     detectMathLibm,
     FingerprintVerdict,
+    fingerprintVerdictLabels,
     getBrowserGroundTruth,
     OsFingerprintType,
     type BrowserGroundTruth,
@@ -264,4 +265,40 @@ export async function runOsFingerprints(): Promise<OsFingerprintReport> {
         comparisons,
         actualGuess,
     };
+}
+
+/**
+ * Renders the live report as plain text for the clipboard, so a fingerprint captured on another
+ * machine (for example a coworker's browser) can be pasted back and added to the reference.
+ */
+export function formatOsFingerprintReport(report: OsFingerprintReport): string {
+    const fingerprintLines = report.comparisons
+        .toSorted((first, second) => first.label.localeCompare(second.label))
+        .map((comparison) => {
+            const detected = comparison.randomized ? 'randomized' : comparison.detected;
+            const expected = comparison.randomized
+                ? 'random'
+                : comparison.expected.join(', ') || 'no reference';
+            return `- ${comparison.label}: ${detected} (expected: ${expected}) → ${fingerprintVerdictLabels[comparison.verdict]}`;
+        });
+    const guessLines = report.actualGuess
+        ? [
+              '',
+              `These fingerprints actually look like: ${report.actualGuess}`,
+          ]
+        : [];
+
+    return [
+        'OS Fingerprint Report',
+        '',
+        `User agent: ${report.groundTruth.userAgent}`,
+        `OS: ${report.groundTruth.osName || 'unknown'}`,
+        `Browser: ${report.groundTruth.browserName || 'unknown'}`,
+        `Version: ${report.groundTruth.browserVersion || 'unknown'}`,
+        `CPU architecture: ${report.detectedCpuArch || 'unknown'}`,
+        '',
+        'Fingerprints:',
+        ...fingerprintLines,
+        ...guessLines,
+    ].join('\n');
 }

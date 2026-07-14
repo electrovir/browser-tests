@@ -1,6 +1,7 @@
 // cspell:words libm
 
-import {css, defineElement, html} from 'element-vir';
+import {wait} from '@augment-vir/common';
+import {css, defineElement, html, listen} from 'element-vir';
 import {viraTheme} from 'vira';
 import {
     osFingerprintReference,
@@ -8,6 +9,7 @@ import {
     type FingerprintReferenceEntry,
 } from '../../os-fingerprint/os-fingerprint-reference.js';
 import {
+    formatOsFingerprintReport,
     runOsFingerprints,
     type OsFingerprintReport,
 } from '../../os-fingerprint/os-fingerprint-report.js';
@@ -198,6 +200,7 @@ export const VirOsFingerprintTests = defineElement()({
     state: () => {
         return {
             report: undefined as OsFingerprintReport | undefined,
+            copied: false,
         };
     },
     init({updateState}) {
@@ -207,11 +210,35 @@ export const VirOsFingerprintTests = defineElement()({
             });
         });
     },
-    render({state}) {
+    render({state, updateState}) {
         const report = state.report;
 
         return html`
             <h1>OS Fingerprint</h1>
+            <button
+                ?disabled=${!report}
+                ${listen('click', async () => {
+                    if (!report) {
+                        return;
+                    }
+                    try {
+                        await navigator.clipboard.writeText(formatOsFingerprintReport(report));
+                        updateState({
+                            copied: true,
+                        });
+                        await wait({
+                            milliseconds: 2000,
+                        });
+                        updateState({
+                            copied: false,
+                        });
+                    } catch {
+                        /** The clipboard API is unavailable outside secure contexts; ignore here. */
+                    }
+                })}
+            >
+                ${state.copied ? 'Copied!' : 'Copy Report'}
+            </button>
             <p>
                 Measures side channels (
                 <code>hyphens: auto</code>

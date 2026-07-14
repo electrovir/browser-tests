@@ -2,7 +2,12 @@
 
 import {assert, assertWrap} from '@augment-vir/assert';
 import {describe, it} from '@augment-vir/test';
-import {classifyFingerprint, guessActualCombo, runOsFingerprints} from './os-fingerprint-report.js';
+import {
+    classifyFingerprint,
+    formatOsFingerprintReport,
+    guessActualCombo,
+    runOsFingerprints,
+} from './os-fingerprint-report.js';
 import {
     browserRandomizesAudio,
     CpuArchitecture,
@@ -107,6 +112,55 @@ describe('os fingerprint report', () => {
                 isMatch: (candidate) => candidate === HyphenationDictionary.Apple,
             }),
             FingerprintVerdict.NoReference,
+        );
+    });
+
+    it('formats a copyable plain-text report of everything measured', () => {
+        const text = formatOsFingerprintReport({
+            groundTruth: {
+                userAgent: 'test-ua',
+                osName: 'macOS',
+                browserName: 'Safari',
+                browserVersion: '26.5.2',
+            },
+            detectedCpuArch: undefined,
+            claimedReference: undefined,
+            comparisons: [
+                {
+                    type: OsFingerprintType.Audio,
+                    label: 'audio fingerprint',
+                    detected: '956.1319',
+                    expected: [],
+                    randomized: true,
+                    verdict: FingerprintVerdict.NoReference,
+                },
+                {
+                    type: OsFingerprintType.Hyphenation,
+                    label: 'hyphenation dictionary',
+                    detected: 'apple',
+                    expected: ['apple'],
+                    randomized: false,
+                    verdict: FingerprintVerdict.Match,
+                },
+            ],
+            actualGuess: undefined,
+        });
+
+        assert.strictEquals(
+            text,
+            [
+                'OS Fingerprint Report',
+                '',
+                'User agent: test-ua',
+                'OS: macOS',
+                'Browser: Safari',
+                'Version: 26.5.2',
+                'CPU architecture: unknown',
+                '',
+                'Fingerprints:',
+                '- audio fingerprint: randomized (expected: random) → no reference',
+                '- hyphenation dictionary: apple (expected: apple) → match',
+            ].join('\n'),
         );
     });
 
