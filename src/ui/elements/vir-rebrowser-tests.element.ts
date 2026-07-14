@@ -5,6 +5,7 @@ import {
     startRebrowserDetections,
     type RebrowserDetection,
 } from '../../rebrowser/rebrowser-detections.js';
+import {iconLabel} from './icon-label.js';
 import {testPanelStyles} from './shared-styles.js';
 
 function renderRebrowserDetections(detections: ReadonlyArray<RebrowserDetection>) {
@@ -18,22 +19,29 @@ function renderRebrowserDetections(detections: ReadonlyArray<RebrowserDetection>
                 </tr>
             </thead>
             <tbody>
-                ${detections.map(
-                    (detection) => html`
-                        <tr>
-                            <td>${detectionRatingIcons[detection.rating]} ${detection.type}</td>
-                            <td>${detection.msSinceLoad} ms</td>
-                            <td>
-                                ${detection.note}
-                                ${detection.debug
-                                    ? html`
-                                          <pre class="debug">${detection.debug}</pre>
-                                      `
-                                    : ''}
-                            </td>
-                        </tr>
-                    `,
-                )}
+                ${detections
+                    .toSorted((first, second) => first.type.localeCompare(second.type))
+                    .map(
+                        (detection) => html`
+                            <tr>
+                                <td>
+                                    ${iconLabel({
+                                        icon: detectionRatingIcons[detection.rating],
+                                        label: detection.type,
+                                    })}
+                                </td>
+                                <td>${detection.msSinceLoad} ms</td>
+                                <td>
+                                    ${detection.note}
+                                    ${detection.debug
+                                        ? html`
+                                              <pre class="debug">${detection.debug}</pre>
+                                          `
+                                        : ''}
+                                </td>
+                            </tr>
+                        `,
+                    )}
             </tbody>
         </table>
     `;
@@ -73,9 +81,7 @@ export const VirRebrowserTests = defineElement()({
         return html`
             <h1>rebrowser bot detection</h1>
             <p>
-                Ports the automation-detection tests from
-                <code>bot-detector.rebrowser.net</code>
-                . They run continuously; some only resolve once an automation tool triggers them.
+                The tests run continuously; some only resolve once an automation tool triggers them.
                 The latest results are also written to
                 <code>window.rebrowserDetections</code>
                 for automation.

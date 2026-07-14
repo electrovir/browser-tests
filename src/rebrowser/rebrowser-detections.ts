@@ -547,7 +547,7 @@ async function reportUserAgent(report: ReportDetection): Promise<void> {
     ) {
         report({
             type: RebrowserDetectionType.UserAgent,
-            rating: DetectionRating.Warning,
+            rating: DetectionRating.NotTriggered,
             note: `navigator.userAgent reports ${browser.name}, but these tests target Chromium-based browsers.`,
             debug,
         });

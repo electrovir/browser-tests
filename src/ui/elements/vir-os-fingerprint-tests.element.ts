@@ -15,6 +15,7 @@ import {
     fingerprintVerdictIcons,
     fingerprintVerdictLabels,
 } from '../../os-fingerprint/os-fingerprints.js';
+import {iconLabel} from './icon-label.js';
 import {testPanelStyles} from './shared-styles.js';
 
 function renderValues(values: ReadonlyArray<string>) {
@@ -37,19 +38,23 @@ function renderLiveResults(report: OsFingerprintReport) {
                 </tr>
             </thead>
             <tbody>
-                ${report.comparisons.map(
-                    (comparison) => html`
-                        <tr>
-                            <td>${comparison.label}</td>
-                            <td>${comparison.detected}</td>
-                            <td>${renderValues(comparison.expected)}</td>
-                            <td>
-                                ${fingerprintVerdictIcons[comparison.verdict]}
-                                ${fingerprintVerdictLabels[comparison.verdict]}
-                            </td>
-                        </tr>
-                    `,
-                )}
+                ${report.comparisons
+                    .toSorted((first, second) => first.label.localeCompare(second.label))
+                    .map(
+                        (comparison) => html`
+                            <tr>
+                                <td>${comparison.label}</td>
+                                <td>${comparison.detected}</td>
+                                <td>${renderValues(comparison.expected)}</td>
+                                <td>
+                                    ${iconLabel({
+                                        icon: fingerprintVerdictIcons[comparison.verdict],
+                                        label: fingerprintVerdictLabels[comparison.verdict],
+                                    })}
+                                </td>
+                            </tr>
+                        `,
+                    )}
             </tbody>
         </table>
     `;
@@ -92,14 +97,20 @@ function renderReferenceTable(report: OsFingerprintReport) {
                 </tr>
             </thead>
             <tbody>
-                ${osFingerprintReference.map((entry) =>
-                    renderReferenceRow({
-                        entry,
-                        isCurrent:
-                            entry.os === report.groundTruth.osName &&
-                            entry.browser === report.groundTruth.browserName,
-                    }),
-                )}
+                ${osFingerprintReference
+                    .toSorted((first, second) =>
+                        `${first.os} ${first.browser}`.localeCompare(
+                            `${second.os} ${second.browser}`,
+                        ),
+                    )
+                    .map((entry) =>
+                        renderReferenceRow({
+                            entry,
+                            isCurrent:
+                                entry.os === report.groundTruth.osName &&
+                                entry.browser === report.groundTruth.browserName,
+                        }),
+                    )}
             </tbody>
         </table>
     `;
