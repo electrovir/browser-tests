@@ -78,13 +78,7 @@ export const VirRebrowserTests = defineElement()({
     },
     render({state}) {
         return html`
-            <h1>Playwright Bot Detection</h1>
-            <p>
-                The tests run continuously; some only resolve once an automation tool triggers them.
-                The latest results are also written to
-                <code>window.rebrowserDetections</code>
-                for automation.
-            </p>
+            <h1>Automation Detection</h1>
             ${renderRebrowserDetections(state.detections)}
         `;
     },

@@ -3,6 +3,7 @@
 import {assert, checkWrap} from '@augment-vir/assert';
 import {describe, it} from '@augment-vir/test';
 import {
+    archFromUserAgent,
     browserRandomizesAudio,
     computeAudioFingerprint,
     CpuArchitecture,
@@ -51,6 +52,33 @@ describe('os fingerprint detection', () => {
         assert.isFalse(browserRandomizesAudio('Chrome'));
         assert.isFalse(browserRandomizesAudio('Firefox'));
         assert.isFalse(browserRandomizesAudio(undefined));
+    });
+
+    it('parses cpu architecture from firefox user agents but not frozen macOS ones', () => {
+        assert.strictEquals(
+            archFromUserAgent(
+                'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0',
+            ),
+            CpuArchitecture.X86,
+        );
+        assert.strictEquals(
+            archFromUserAgent(
+                'Mozilla/5.0 (X11; Linux aarch64; rv:152.0) Gecko/20100101 Firefox/152.0',
+            ),
+            CpuArchitecture.Arm,
+        );
+        assert.strictEquals(
+            archFromUserAgent(
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:152.0) Gecko/20100101 Firefox/152.0',
+            ),
+            CpuArchitecture.X86,
+        );
+        /** MacOS Firefox and Safari freeze the platform to a fake "Intel Mac"; no real arch shows. */
+        assert.isUndefined(
+            archFromUserAgent(
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0',
+            ),
+        );
     });
 
     it('detects a deterministic, valid cpu architecture when one is exposed', async () => {

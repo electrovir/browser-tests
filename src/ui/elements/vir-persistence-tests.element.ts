@@ -101,7 +101,7 @@ export const VirPersistenceTests = defineElement()({
         })
             .then((result) => {
                 window.persistenceTestResult = result;
-                document.title = `Browser Persistence Test — ${mode} complete`;
+                document.title = `Data Persistence — ${mode} complete`;
                 updateState({
                     status: RunStatus.Done,
                     result,
@@ -109,7 +109,7 @@ export const VirPersistenceTests = defineElement()({
             })
             .catch((error: unknown) => {
                 console.error(error);
-                document.title = 'Browser Persistence Test — failed';
+                document.title = 'Data Persistence — failed';
                 updateState({
                     status: RunStatus.Done,
                 });
@@ -117,17 +117,7 @@ export const VirPersistenceTests = defineElement()({
     },
     render({state}) {
         return html`
-            <h1>Browser Persistence Test</h1>
-            <p>
-                Seeds a unique marker into every browser persistence mechanism, then reads it back
-                in a separate session to see which ones survive. Drive it with
-                <code>?mode=seed&marker=…</code>
-                then
-                <code>?mode=verify&marker=…</code>
-                ; the JSON result is also written to
-                <code>window.persistenceTestResult</code>
-                for automation.
-            </p>
+            <h1>Data Persistence</h1>
             <p>
                 current marker:
                 <code>${state.marker}</code>

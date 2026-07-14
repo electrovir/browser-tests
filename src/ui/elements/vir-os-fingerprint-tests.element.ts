@@ -239,14 +239,6 @@ export const VirOsFingerprintTests = defineElement()({
             >
                 ${state.copied ? 'Copied!' : 'Copy Report'}
             </button>
-            <p>
-                Measures side channels (
-                <code>hyphens: auto</code>
-                dictionaries, libm rounding, and an audio render) and checks each against a
-                reference of what the browser + OS the user agent claims should produce. A value
-                that instead belongs to a different browser + OS is how a spoofed user agent gets
-                caught.
-            </p>
             ${report
                 ? html`
                       <code class="user-agent">${report.groundTruth.userAgent}</code>

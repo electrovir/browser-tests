@@ -1,4 +1,4 @@
-// cspell:words libm glibc ucrt minikin fdlibm libsystem tanh atob kansainvälistyminen constitutionalibus scrapfly spoofable aosp hyphenator
+// cspell:words libm glibc ucrt minikin fdlibm libsystem tanh atob kansainvälistyminen constitutionalibus scrapfly spoofable aosp hyphenator aarch64 amd64 wow64
 
 import {check, checkWrap} from '@augment-vir/assert';
 import {getObjectTypedKeys} from '@augment-vir/common';
@@ -322,17 +322,60 @@ function getNavigatorUserAgentData(): NavigatorUserAgentData | undefined {
         : undefined;
 }
 
+/** ARM CPU markers Firefox reports in its user agent on Windows and Linux. */
+const armUserAgentTokens: ReadonlyArray<string> = [
+    'aarch64',
+    'arm64',
+];
+/** X86 CPU markers Firefox reports in its user agent on Windows and Linux. */
+const x86UserAgentTokens: ReadonlyArray<string> = [
+    'x86_64',
+    'x64',
+    'win64',
+    'wow64',
+    'amd64',
+    'i686',
+    'i386',
+];
+
+/**
+ * Parses the CPU architecture out of a user agent string. Firefox reports the real platform on
+ * Windows and Linux; macOS Firefox and Safari freeze the platform to a fake "Intel" token that
+ * matches none of these markers, so they return undefined rather than a wrong guess.
+ */
+export function archFromUserAgent(userAgent: string): CpuArchitecture | undefined {
+    const normalized = userAgent.toLowerCase();
+    if (armUserAgentTokens.some((token) => normalized.includes(token))) {
+        return CpuArchitecture.Arm;
+    } else if (x86UserAgentTokens.some((token) => normalized.includes(token))) {
+        return CpuArchitecture.X86;
+    }
+    return undefined;
+}
+
 /**
  * The audio fingerprint varies with CPU architecture (vector-math rounding differs on ARM vs x86),
- * so an audio sum is only meaningful alongside the architecture it was produced on. Only Chromium
- * exposes the architecture (via UA client hints); Safari and Firefox return undefined, and the
- * report then falls back to matching audio across every architecture for those.
+ * so an audio sum is only meaningful alongside the architecture it was produced on. Chromium
+ * exposes the architecture via UA client hints; Firefox has none but reports it in its user agent
+ * (except on macOS, which it freezes); Safari exposes neither, so it returns undefined and the
+ * report then matches audio across every architecture.
  */
 export async function detectCpuArch(): Promise<CpuArchitecture | undefined> {
     const userAgentData = getNavigatorUserAgentData();
-    if (!userAgentData) {
-        return undefined;
+    if (userAgentData) {
+        const highEntropyValues = await userAgentData.getHighEntropyValues(['architecture']);
+        const clientHintArch = checkWrap.isEnumValue(
+            highEntropyValues.architecture,
+            CpuArchitecture,
+        );
+        if (clientHintArch != undefined) {
+            return clientHintArch;
+        }
     }
-    const highEntropyValues = await userAgentData.getHighEntropyValues(['architecture']);
-    return checkWrap.isEnumValue(highEntropyValues.architecture, CpuArchitecture);
+
+    if (Bowser.parse(navigator.userAgent).browser.name === 'Firefox') {
+        return archFromUserAgent(navigator.userAgent);
+    }
+
+    return undefined;
 }

@@ -138,6 +138,13 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 766.5973,
             },
+            {
+                majorVersion: '152',
+                cpuArch: CpuArchitecture.X86,
+                hyphenationDictionary: HyphenationDictionary.Bundled,
+                libmSignature: LibmSignature.Glibc,
+                audioSum: 766.5973,
+            },
         ],
     },
 ];
