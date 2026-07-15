@@ -1,5 +1,3 @@
-// cspell:words libm
-
 import {check} from '@augment-vir/assert';
 import {filterMap} from '@augment-vir/common';
 import {
@@ -98,7 +96,6 @@ export function classifyFingerprint<Value>({
 }
 
 export type DetectedFingerprints = Readonly<{
-    cpuArch: CpuArchitecture | undefined;
     hyphenation: HyphenationDictionary | undefined;
     libm: LibmSignature | undefined;
     audio: number | undefined;
@@ -108,16 +105,22 @@ function audioMatches({candidate, live}: Readonly<{candidate: number; live: numb
     return Math.abs(candidate - live) <= audioMatchTolerance;
 }
 
+/**
+ * Scores how well one reference entry matches the measured fingerprints. Unlike the claimed-browser
+ * verdict, the audio sum is compared against every captured architecture's sum rather than only the
+ * detected one: this guess is computed precisely because the user agent is already lying, and a
+ * user agent that fakes its platform string can just as trivially fake its `architecture` client
+ * hint, whereas the audio sum comes from the real render pipeline and is far harder to forge.
+ * Scoping by the arch here would let a spoofed hint discard the strongest honest signal (e.g. an
+ * x86 Chromium audio sum reported alongside a faked `arm` hint, which with glibc uniquely
+ * identifies Linux Chrome).
+ */
 function scoreEntryAgainstDetected({
     entry,
     detected,
 }: Readonly<{entry: FingerprintReferenceEntry; detected: DetectedFingerprints}>): number {
     const summary = summarizeObservations(entry.observations);
     const liveAudio = detected.audio;
-    const scopedAudioSums = audioSumsForArch({
-        observations: entry.observations,
-        cpuArch: detected.cpuArch,
-    });
     const weightedMatches: ReadonlyArray<number> = [
         detected.hyphenation != undefined &&
         summary.hyphenationDictionaries.includes(detected.hyphenation)
@@ -127,7 +130,7 @@ function scoreEntryAgainstDetected({
             ? guessWeights.libm
             : 0,
         liveAudio != undefined &&
-        scopedAudioSums.some((sum) =>
+        summary.audioSums.some((sum) =>
             audioMatches({
                 candidate: sum,
                 live: liveAudio,
@@ -248,7 +251,6 @@ export async function runOsFingerprints(): Promise<OsFingerprintReport> {
     const actualGuess = hasMismatch
         ? guessActualCombo({
               detected: {
-                  cpuArch: detectedCpuArch,
                   hyphenation: hyphenation.detected,
                   libm: mathLibm.detected,
                   audio: audioRandomized ? undefined : audio?.sum,

@@ -1,5 +1,3 @@
-// cspell:words libm
-
 import {wait} from '@augment-vir/common';
 import {css, defineElement, html, listen} from 'element-vir';
 import {viraTheme} from 'vira';

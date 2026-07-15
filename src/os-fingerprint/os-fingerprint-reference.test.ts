@@ -1,5 +1,3 @@
-// cspell:words libm
-
 import {assert} from '@augment-vir/assert';
 import {describe, it} from '@augment-vir/test';
 import {audioSumsForArch, type FingerprintObservation} from './os-fingerprint-reference.js';

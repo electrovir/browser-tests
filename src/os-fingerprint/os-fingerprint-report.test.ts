@@ -1,5 +1,3 @@
-// cspell:words libm
-
 import {assert, assertWrap} from '@augment-vir/assert';
 import {describe, it} from '@augment-vir/test';
 import {
@@ -10,7 +8,6 @@ import {
 } from './os-fingerprint-report.js';
 import {
     browserRandomizesAudio,
-    CpuArchitecture,
     FingerprintVerdict,
     HyphenationDictionary,
     LibmSignature,
@@ -172,8 +169,29 @@ describe('os fingerprint report', () => {
         assert.strictEquals(
             guessActualCombo({
                 detected: {
-                    cpuArch: CpuArchitecture.X86,
                     hyphenation: HyphenationDictionary.Minikin,
+                    libm: LibmSignature.Glibc,
+                    audio: 956.3164,
+                },
+                claimedOsName: 'macOS',
+                claimedBrowserName: 'Chrome',
+            }),
+            'Linux Chrome',
+        );
+    });
+
+    it('trusts the hard-to-fake audio sum over an architecture hint', () => {
+        /**
+         * A headless x86 Chrome claiming to be an Intel Mac reports a faked `arm` architecture hint
+         * alongside the x86 Chromium audio sum and no hyphenation dictionary. The guess must follow
+         * the audio sum — which, with glibc, is unique to Linux Chrome — rather than let the faked
+         * arm hint bury the audio signal and collapse the guess into a libm-only tie won by macOS
+         * Firefox.
+         */
+        assert.strictEquals(
+            guessActualCombo({
+                detected: {
+                    hyphenation: undefined,
                     libm: LibmSignature.Glibc,
                     audio: 956.3164,
                 },

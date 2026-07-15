@@ -1,4 +1,4 @@
-// cspell:words libm glibc ucrt minikin fdlibm libsystem tanh atob kansainvälistyminen constitutionalibus scrapfly spoofable aosp hyphenator aarch64 amd64 wow64 farble farbles
+// cspell:words glibc ucrt minikin fdlibm libsystem tanh atob kansainvälistyminen constitutionalibus scrapfly spoofable aosp hyphenator aarch64 amd64 wow64 farble farbles
 
 import {check, checkWrap} from '@augment-vir/assert';
 import {getObjectTypedKeys} from '@augment-vir/common';

@@ -1,4 +1,4 @@
-// cspell:words libm ucrt farble farbles
+// cspell:words ucrt farble farbles
 
 import {check} from '@augment-vir/assert';
 import {filterMap} from '@augment-vir/common';
