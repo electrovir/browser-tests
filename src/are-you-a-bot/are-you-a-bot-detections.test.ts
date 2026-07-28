@@ -1,4 +1,4 @@
-import {assert} from '@augment-vir/assert';
+import {assert, assertWrap} from '@augment-vir/assert';
 import {describe, it} from '@augment-vir/test';
 import {DetectionRating} from '../rebrowser/rebrowser-detections.js';
 import {
@@ -24,6 +24,30 @@ describe('are you a bot detections', () => {
             assert.isEnumValue(signal.rating, DetectionRating);
             assert.isNotEmpty(signal.note);
         });
+    });
+
+    it('accepts the navigator.vendor every real engine reports', async () => {
+        const report = await runBotDetections();
+        const vendorSignal = assertWrap.isDefined(
+            report.signals.find((signal) => signal.type === BotSignalType.NavigatorVendor),
+        );
+
+        /** Chromium, WebKit, and Gecko each report their engine's constant, so none may be flagged. */
+        assert.strictEquals(vendorSignal.rating, DetectionRating.Pass);
+    });
+
+    it('never calls a real browser out over apple pay', async () => {
+        const report = await runBotDetections();
+        const applePaySignal = assertWrap.isDefined(
+            report.signals.find((signal) => signal.type === BotSignalType.ApplePay),
+        );
+
+        /**
+         * Playwright's WebKit claims macOS Safari without shipping Apple Pay, which earns the weak
+         * warning; the conclusive rating is reserved for Apple Pay appearing where it cannot
+         * exist.
+         */
+        assert.notStrictEquals(applePaySignal.rating, DetectionRating.Detected);
     });
 
     it('aggregates weak and strong signals into a verdict', () => {

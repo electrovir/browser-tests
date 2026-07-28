@@ -1,4 +1,4 @@
-// cspell:words tanh libm
+// cspell:words tanh libm calibri cambria segoe dejavu roboto
 
 import {assert, checkWrap} from '@augment-vir/assert';
 import {describe, it} from '@augment-vir/test';
@@ -9,8 +9,11 @@ import {
     CpuArchitecture,
     detectBrave,
     detectCpuArch,
+    detectFontPlatform,
     detectHyphenationDictionary,
     detectMathLibm,
+    FontPlatform,
+    platformFromInstalledFonts,
     tanhAnchorValue,
 } from './os-fingerprints.js';
 
@@ -100,6 +103,59 @@ describe('os fingerprint detection', () => {
             /** Engines without UA client hints (Safari, Firefox) return undefined instead. */
             assert.isDefined(checkWrap.isEnumValue(first, CpuArchitecture));
         }
+    });
+
+    it('detects a deterministic font platform', () => {
+        const result = detectFontPlatform();
+
+        assert.deepEquals(result, detectFontPlatform());
+        if (result.detected != undefined) {
+            assert.isEnumValue(result.detected, FontPlatform);
+            /** A platform is only ever claimed on the strength of a marker font it actually found. */
+            assert.isNotEmpty(result.installedFonts);
+        }
+    });
+
+    it('picks the platform whose marker fonts are present', () => {
+        assert.strictEquals(
+            platformFromInstalledFonts([
+                'Geneva',
+                'Helvetica Neue',
+            ]),
+            FontPlatform.Apple,
+        );
+        assert.strictEquals(
+            platformFromInstalledFonts([
+                'Calibri',
+                'Cambria',
+                'Segoe UI',
+            ]),
+            FontPlatform.Windows,
+        );
+        assert.strictEquals(
+            platformFromInstalledFonts([
+                'DejaVu Sans',
+                'Ubuntu',
+            ]),
+            FontPlatform.Linux,
+        );
+        assert.strictEquals(platformFromInstalledFonts(['Roboto Condensed']), FontPlatform.Android);
+    });
+
+    it('claims no font platform without unambiguous evidence', () => {
+        assert.isUndefined(platformFromInstalledFonts([]));
+        /** An unknown family belongs to no platform's marker list. */
+        assert.isUndefined(platformFromInstalledFonts(['Comic Sans MS']));
+        /**
+         * One marker font from each of two platforms is a tie, which a machine with cross-platform
+         * fonts installed (Office on macOS ships Calibri) genuinely produces.
+         */
+        assert.isUndefined(
+            platformFromInstalledFonts([
+                'Geneva',
+                'Calibri',
+            ]),
+        );
     });
 
     it('detects a deterministic math libm signature', () => {

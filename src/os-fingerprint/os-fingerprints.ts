@@ -1,7 +1,8 @@
 // cspell:words glibc ucrt minikin fdlibm libsystem tanh atob kansainvälistyminen constitutionalibus scrapfly spoofable aosp hyphenator aarch64 amd64 wow64 farble farbles
+// cspell:words chancery calibri cambria segoe dejavu nimbus roboto droid lucida mmmmmmmmmmlli
 
 import {check, checkWrap} from '@augment-vir/assert';
-import {getObjectTypedKeys} from '@augment-vir/common';
+import {getObjectTypedKeys, getObjectTypedValues} from '@augment-vir/common';
 import Bowser from 'bowser';
 
 /**
@@ -13,11 +14,15 @@ import Bowser from 'bowser';
  * - Hyphenation: https://scrapfly.dev/posts/browser-hyphenation-os-fingerprint/
  * - Math libm: https://scrapfly.dev/posts/browser-math-os-fingerprint/
  * - Audio: https://scrapfly.dev/posts/audio-fingerprint-math/
+ *
+ * Font enumeration is the same idea applied to the font collection each OS ships, the technique
+ * FingerprintJS uses as its highest-entropy source: https://github.com/fingerprintjs/fingerprintjs
  */
 export enum OsFingerprintType {
     Hyphenation = 'hyphenation',
     MathLibm = 'mathLibm',
     Audio = 'audio',
+    Fonts = 'fonts',
 }
 
 /** The source of a browser's hyphenation dictionaries. */
@@ -32,6 +37,19 @@ export enum HyphenationDictionary {
      * system.
      */
     Bundled = 'bundled',
+}
+
+/**
+ * The font collection an operating system ships. Unlike hyphenation, which cannot separate the
+ * three Minikin platforms from each other, fonts tell Windows, Linux, and Android apart.
+ */
+export enum FontPlatform {
+    /** MacOS and iOS. */
+    Apple = 'apple',
+    Windows = 'windows',
+    /** Desktop Linux distributions and ChromeOS. */
+    Linux = 'linux',
+    Android = 'android',
 }
 
 /** The C math library a JS engine's `Math.tanh` routes to, distinguishable by its exact rounding. */
@@ -228,6 +246,120 @@ export function detectHyphenationDictionary(): HyphenationResult {
             finnishHyphenates: finnish.hyphenates,
             latinHyphenates: latin.hyphenates,
         }),
+    };
+}
+
+export type FontPlatformResult = Readonly<{
+    /** Every probed marker font the browser was able to render, for display and debugging. */
+    installedFonts: ReadonlyArray<string>;
+    detected: FontPlatform | undefined;
+}>;
+
+/**
+ * Marker fonts each platform ships and the others do not. Probing families exclusive to one
+ * platform (rather than hashing a full font list) keeps the signal stable across OS versions, since
+ * a single missing family only weakens its platform's score instead of changing the result
+ * outright.
+ */
+const platformMarkerFonts: Record<FontPlatform, ReadonlyArray<string>> = {
+    [FontPlatform.Apple]: [
+        'Apple Chancery',
+        'Geneva',
+        'Helvetica Neue',
+        'Lucida Grande',
+    ],
+    [FontPlatform.Windows]: [
+        'Calibri',
+        'Cambria',
+        'Segoe UI',
+        'Franklin Gothic Medium',
+    ],
+    [FontPlatform.Linux]: [
+        'DejaVu Sans',
+        'Liberation Sans',
+        'Nimbus Sans',
+        'Ubuntu',
+    ],
+    [FontPlatform.Android]: [
+        'Droid Sans Mono',
+        'Roboto Condensed',
+    ],
+};
+
+/**
+ * Wide, mixed-width text so a substituted font almost certainly renders at a different width than
+ * the fallback. The large size amplifies per-glyph differences beyond subpixel rounding.
+ */
+const fontProbeText = 'mmmmmmmmmmlli';
+const fontProbeSizePx = 72;
+
+/** Generic families the browser always resolves, used as the "font not found" baselines. */
+const fontBaselineFamilies: ReadonlyArray<string> = [
+    'monospace',
+    'sans-serif',
+    'serif',
+];
+
+/** Renders {@link fontProbeText} in `fontFamily` and returns its rendered width in pixels. */
+function measureTextWidth(fontFamily: string): number {
+    const element = document.createElement('span');
+    element.textContent = fontProbeText;
+    element.style.cssText = [
+        'position:absolute',
+        'left:-9999px',
+        'top:0',
+        'white-space:nowrap',
+        `font:${fontProbeSizePx}px ${fontFamily}`,
+    ].join(';');
+    document.body.append(element);
+    const width = element.getBoundingClientRect().width;
+    element.remove();
+    return width;
+}
+
+/**
+ * Picks the platform whose marker fonts are present. A tie means the evidence points at more than
+ * one platform at once, so no claim is made rather than guessing at the wrong one.
+ */
+export function platformFromInstalledFonts(
+    installedFonts: ReadonlyArray<string>,
+): FontPlatform | undefined {
+    const ranked = getObjectTypedKeys(platformMarkerFonts)
+        .map((platform) => {
+            return {
+                platform,
+                count: platformMarkerFonts[platform].filter((font) => installedFonts.includes(font))
+                    .length,
+            };
+        })
+        .toSorted((first, second) => second.count - first.count);
+    const best = ranked[0];
+
+    if (!best || best.count === 0 || ranked[1]?.count === best.count) {
+        return undefined;
+    }
+    return best.platform;
+}
+
+/**
+ * Probes each marker font by rendering the probe text in it with a generic family as the fallback.
+ * A width that differs from the bare fallback's means the browser found the requested family, since
+ * otherwise it would have rendered the fallback and produced an identical width.
+ */
+export function detectFontPlatform(): FontPlatformResult {
+    const baselineWidths = fontBaselineFamilies.map((family) => measureTextWidth(family));
+    const installedFonts = getObjectTypedValues(platformMarkerFonts)
+        .flat()
+        .filter((font) =>
+            fontBaselineFamilies.some(
+                (family, index) =>
+                    measureTextWidth(`"${font}",${family}`) !== baselineWidths[index],
+            ),
+        );
+
+    return {
+        installedFonts,
+        detected: platformFromInstalledFonts(installedFonts),
     };
 }
 

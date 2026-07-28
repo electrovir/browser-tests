@@ -31,6 +31,8 @@ export enum BotSignalType {
     ScreenResolution = 'screenResolution',
     WorkerConsistency = 'workerConsistency',
     IframeOverrides = 'iframeOverrides',
+    NavigatorVendor = 'navigatorVendor',
+    ApplePay = 'applePay',
 }
 
 export const botSignalLabels: Record<BotSignalType, string> = {
@@ -46,6 +48,8 @@ export const botSignalLabels: Record<BotSignalType, string> = {
     [BotSignalType.ScreenResolution]: 'screen resolution',
     [BotSignalType.WorkerConsistency]: 'web worker consistency',
     [BotSignalType.IframeOverrides]: 'iframe / native function overrides',
+    [BotSignalType.NavigatorVendor]: 'navigator.vendor consistency',
+    [BotSignalType.ApplePay]: 'apple pay availability',
 };
 
 /** The overall client-side verdict aggregated from the individual signals. */
@@ -668,6 +672,96 @@ function detectIframeOverrides(): BotSignalResult {
 }
 
 /**
+ * `navigator.vendor` is a fixed constant per engine rather than per browser or version, so any
+ * deviation from the engine's constant is a spoofing artifact. Every Chromium browser reports
+ * Google (Edge, Opera, and Brave included) and every WebKit browser reports Apple, so this catches
+ * a user agent that claims one engine while running another.
+ */
+const vendorsByEngineName: Readonly<Record<string, string>> = {
+    Blink: 'Google Inc.',
+    WebKit: 'Apple Computer, Inc.',
+    Gecko: '',
+};
+
+function detectNavigatorVendor(): BotSignalResult {
+    const engineName = Bowser.parse(navigator.userAgent).engine.name;
+    const expectedVendor = engineName == undefined ? undefined : vendorsByEngineName[engineName];
+    const debug = `navigator.vendor = "${navigator.vendor}", engine = ${engineName || 'unknown'}`;
+
+    if (expectedVendor == undefined) {
+        return {
+            rating: DetectionRating.NotTriggered,
+            note: `No known navigator.vendor value for the ${engineName || 'unrecognized'} engine.`,
+            debug,
+        };
+    } else if (navigator.vendor !== expectedVendor) {
+        return {
+            rating: DetectionRating.Detected,
+            note: `navigator.vendor is "${navigator.vendor}" but the ${engineName} engine always reports "${expectedVendor}".`,
+            debug,
+        };
+    }
+
+    return {
+        rating: DetectionRating.Pass,
+        note: `navigator.vendor matches the ${engineName} engine.`,
+        debug,
+    };
+}
+
+/** Bowser `os.name` values for the Apple platforms that ship Apple Pay. */
+const applePlatformNames: ReadonlyArray<string> = [
+    'macOS',
+    'iOS',
+];
+
+/**
+ * Apple Pay is exposed only by Safari on Apple hardware, so `ApplePaySession` is a hard tell for
+ * the real browser and platform underneath a spoofed user agent. Non-Apple WebKit builds
+ * (Playwright's WebKit, Epiphany) lack it, which is exactly what makes a claimed macOS Safari
+ * without it suspicious.
+ */
+function detectApplePay(): BotSignalResult {
+    const hasApplePay = Reflect.get(window, 'ApplePaySession') != undefined;
+    const parsed = Bowser.parse(navigator.userAgent);
+    const claimsAppleSafari =
+        parsed.browser.name === 'Safari' &&
+        parsed.os.name != undefined &&
+        applePlatformNames.includes(parsed.os.name);
+    const debug = `window.ApplePaySession ${hasApplePay ? 'present' : 'absent'}, claimed = ${parsed.os.name || 'unknown'} ${parsed.browser.name || 'unknown'}`;
+
+    if (hasApplePay && !claimsAppleSafari) {
+        return {
+            rating: DetectionRating.Detected,
+            note: 'window.ApplePaySession exists, but only Safari on macOS or iOS exposes it, so the user agent is not the real browser.',
+            debug,
+        };
+    } else if (!hasApplePay && claimsAppleSafari && window.isSecureContext) {
+        return {
+            /**
+             * Weak rather than conclusive: a managed or stripped-down Safari build can lack Apple
+             * Pay without being automated.
+             */
+            rating: DetectionRating.Warning,
+            note: 'The user agent claims Safari on an Apple platform, but window.ApplePaySession is missing.',
+            debug,
+        };
+    } else if (!window.isSecureContext) {
+        return {
+            rating: DetectionRating.NotTriggered,
+            note: 'Apple Pay is only exposed in a secure context, so its absence here means nothing.',
+            debug,
+        };
+    }
+
+    return {
+        rating: DetectionRating.Pass,
+        note: 'Apple Pay availability is consistent with the claimed browser and platform.',
+        debug,
+    };
+}
+
+/**
  * Weak-signal aggregation: any single strong signal, or two or more weak ones, flags a bot; a lone
  * weak signal is merely suspicious.
  */
@@ -709,6 +803,8 @@ export async function runBotDetections(): Promise<BotReport> {
         [BotSignalType.ScreenResolution]: detectScreenResolution(),
         [BotSignalType.WorkerConsistency]: workerConsistency,
         [BotSignalType.IframeOverrides]: detectIframeOverrides(),
+        [BotSignalType.NavigatorVendor]: detectNavigatorVendor(),
+        [BotSignalType.ApplePay]: detectApplePay(),
     };
 
     const signals: ReadonlyArray<BotSignal> = getObjectTypedKeys(resultsByType).map((type) => {

@@ -10,6 +10,7 @@ import {
     browserRandomizesAudio,
     computeAudioFingerprint,
     detectCpuArch,
+    detectFontPlatform,
     detectHyphenationDictionary,
     detectMathLibm,
     FingerprintVerdict,
@@ -18,6 +19,7 @@ import {
     OsFingerprintType,
     type BrowserGroundTruth,
     type CpuArchitecture,
+    type FontPlatform,
     type HyphenationDictionary,
     type LibmSignature,
 } from './os-fingerprints.js';
@@ -38,6 +40,8 @@ export type OsFingerprintReport = Readonly<{
     groundTruth: BrowserGroundTruth;
     /** The live CPU architecture, when the engine exposes it (Chromium only). */
     detectedCpuArch: CpuArchitecture | undefined;
+    /** The marker fonts actually found, so a `none` font platform can be explained. */
+    installedFonts: ReadonlyArray<string>;
     /** The reference row for the browser + OS the user agent claims, if it has been captured. */
     claimedReference: FingerprintReferenceEntry | undefined;
     comparisons: ReadonlyArray<FingerprintComparison>;
@@ -49,6 +53,7 @@ const fingerprintLabels: Record<OsFingerprintType, string> = {
     [OsFingerprintType.Hyphenation]: 'hyphenation dictionary',
     [OsFingerprintType.MathLibm]: 'math libm signature',
     [OsFingerprintType.Audio]: 'audio fingerprint',
+    [OsFingerprintType.Fonts]: 'font platform',
 };
 
 /**
@@ -66,6 +71,8 @@ const audioMatchTolerance = 0.0001;
 const guessWeights = {
     hyphenation: 2,
     audio: 2,
+    /** Fonts are the only signal that separates Windows, Linux, and Android from each other. */
+    fonts: 2,
     libm: 1,
 };
 
@@ -99,6 +106,7 @@ export type DetectedFingerprints = Readonly<{
     hyphenation: HyphenationDictionary | undefined;
     libm: LibmSignature | undefined;
     audio: number | undefined;
+    fonts: FontPlatform | undefined;
 }>;
 
 function audioMatches({candidate, live}: Readonly<{candidate: number; live: number}>): boolean {
@@ -128,6 +136,9 @@ function scoreEntryAgainstDetected({
             : 0,
         detected.libm != undefined && summary.libmSignatures.includes(detected.libm)
             ? guessWeights.libm
+            : 0,
+        detected.fonts != undefined && summary.fontPlatforms.includes(detected.fonts)
+            ? guessWeights.fonts
             : 0,
         liveAudio != undefined &&
         summary.audioSums.some((sum) =>
@@ -188,6 +199,7 @@ export async function runOsFingerprints(): Promise<OsFingerprintReport> {
     const detectedCpuArch = await detectCpuArch();
     const hyphenation = detectHyphenationDictionary();
     const mathLibm = detectMathLibm();
+    const fonts = detectFontPlatform();
     const audio = await computeAudioFingerprint();
     /** Safari and Brave both alter the audio render each session, so the sum is not comparable. */
     const audioRandomized = browserRandomizesAudio(groundTruth.browserName);
@@ -209,6 +221,18 @@ export async function runOsFingerprints(): Promise<OsFingerprintReport> {
                 live: hyphenation.detected,
                 claimedValues: claimedSummary.hyphenationDictionaries,
                 isMatch: (candidate) => candidate === hyphenation.detected,
+            }),
+        },
+        {
+            type: OsFingerprintType.Fonts,
+            label: fingerprintLabels[OsFingerprintType.Fonts],
+            detected: fonts.detected ?? 'none',
+            expected: claimedSummary.fontPlatforms,
+            randomized: false,
+            verdict: classifyFingerprint({
+                live: fonts.detected,
+                claimedValues: claimedSummary.fontPlatforms,
+                isMatch: (candidate) => candidate === fonts.detected,
             }),
         },
         {
@@ -254,6 +278,7 @@ export async function runOsFingerprints(): Promise<OsFingerprintReport> {
                   hyphenation: hyphenation.detected,
                   libm: mathLibm.detected,
                   audio: audioRandomized ? undefined : audio?.sum,
+                  fonts: fonts.detected,
               },
               claimedOsName: groundTruth.osName,
               claimedBrowserName: groundTruth.browserName,
@@ -263,6 +288,7 @@ export async function runOsFingerprints(): Promise<OsFingerprintReport> {
     return {
         groundTruth,
         detectedCpuArch,
+        installedFonts: fonts.installedFonts,
         claimedReference,
         comparisons,
         actualGuess,
@@ -298,6 +324,7 @@ export function formatOsFingerprintReport(report: OsFingerprintReport): string {
         `Browser: ${report.groundTruth.browserName || 'unknown'}`,
         `Version: ${report.groundTruth.browserVersion || 'unknown'}`,
         `CPU architecture: ${report.detectedCpuArch || 'unknown'}`,
+        `Installed marker fonts: ${report.installedFonts.join(', ') || 'none'}`,
         '',
         'Fingerprints:',
         ...fingerprintLines,

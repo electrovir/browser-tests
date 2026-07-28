@@ -9,6 +9,7 @@ import {
 import {
     browserRandomizesAudio,
     FingerprintVerdict,
+    FontPlatform,
     HyphenationDictionary,
     LibmSignature,
     OsFingerprintType,
@@ -121,6 +122,10 @@ describe('os fingerprint report', () => {
                 browserVersion: '26.5.2',
             },
             detectedCpuArch: undefined,
+            installedFonts: [
+                'Geneva',
+                'Helvetica Neue',
+            ],
             claimedReference: undefined,
             comparisons: [
                 {
@@ -153,6 +158,7 @@ describe('os fingerprint report', () => {
                 'Browser: Safari',
                 'Version: 26.5.2',
                 'CPU architecture: unknown',
+                'Installed marker fonts: Geneva, Helvetica Neue',
                 '',
                 'Fingerprints:',
                 '- audio fingerprint: randomized (expected: random) → no reference',
@@ -172,6 +178,7 @@ describe('os fingerprint report', () => {
                     hyphenation: HyphenationDictionary.Minikin,
                     libm: LibmSignature.Glibc,
                     audio: 956.3164,
+                    fonts: undefined,
                 },
                 claimedOsName: 'macOS',
                 claimedBrowserName: 'Chrome',
@@ -194,11 +201,33 @@ describe('os fingerprint report', () => {
                     hyphenation: undefined,
                     libm: LibmSignature.Glibc,
                     audio: 956.3164,
+                    fonts: undefined,
                 },
                 claimedOsName: 'macOS',
                 claimedBrowserName: 'Chrome',
             }),
             'Linux Chrome',
+        );
+    });
+
+    it('names the real platform when only the font set gives it away', () => {
+        /**
+         * Hyphenation cannot tell the three Minikin platforms apart and this audio sum is shared by
+         * Windows, Linux, and Intel macOS Chromium, so the Apple font set is the only signal that
+         * pins the machine to macOS.
+         */
+        assert.strictEquals(
+            guessActualCombo({
+                detected: {
+                    hyphenation: HyphenationDictionary.Apple,
+                    libm: LibmSignature.AppleLibm,
+                    audio: 956.3164,
+                    fonts: FontPlatform.Apple,
+                },
+                claimedOsName: 'Windows',
+                claimedBrowserName: 'Chrome',
+            }),
+            'macOS Chrome',
         );
     });
 });

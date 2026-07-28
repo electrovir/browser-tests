@@ -5,6 +5,7 @@ import {filterMap} from '@augment-vir/common';
 import {
     braveBrowserName,
     CpuArchitecture,
+    FontPlatform,
     HyphenationDictionary,
     LibmSignature,
 } from './os-fingerprints.js';
@@ -18,6 +19,8 @@ export type FingerprintObservation = Readonly<{
     hyphenationDictionary: HyphenationDictionary | undefined;
     libmSignature: LibmSignature | undefined;
     audioSum: number | undefined;
+    /** Left unset on rows whose font set has not actually been measured yet. */
+    fontPlatform: FontPlatform | undefined;
 }>;
 
 /**
@@ -46,6 +49,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Apple,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 956.316634,
+                fontPlatform: FontPlatform.Apple,
             },
             {
                 majorVersion: '149',
@@ -53,6 +57,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Apple,
                 libmSignature: LibmSignature.AppleLibm,
                 audioSum: 956.3166342371878,
+                fontPlatform: FontPlatform.Apple,
             },
             {
                 /** Intel Macs share the x86 Chromium audio sum (956.3164) with Windows and Linux. */
@@ -61,6 +66,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Apple,
                 libmSignature: LibmSignature.AppleLibm,
                 audioSum: 956.3164,
+                fontPlatform: FontPlatform.Apple,
             },
         ],
     },
@@ -78,6 +84,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Apple,
                 libmSignature: LibmSignature.AppleLibm,
                 audioSum: undefined,
+                fontPlatform: FontPlatform.Apple,
             },
             {
                 /** Intel Mac Safari randomizes its audio too, so the sum is left unset. */
@@ -86,6 +93,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Apple,
                 libmSignature: LibmSignature.AppleLibm,
                 audioSum: undefined,
+                fontPlatform: FontPlatform.Apple,
             },
         ],
     },
@@ -99,6 +107,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Bundled,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 766.597307,
+                fontPlatform: FontPlatform.Apple,
             },
             {
                 majorVersion: '151',
@@ -106,6 +115,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Bundled,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 766.5973066808656,
+                fontPlatform: FontPlatform.Apple,
             },
             {
                 /** Intel Mac Firefox; its audio sum barely differs from Apple Silicon Firefox. */
@@ -114,6 +124,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Bundled,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 766.5973,
+                fontPlatform: FontPlatform.Apple,
             },
         ],
     },
@@ -128,6 +139,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Apple,
                 libmSignature: LibmSignature.AppleLibm,
                 audioSum: 956.3164,
+                fontPlatform: FontPlatform.Apple,
             },
         ],
     },
@@ -142,6 +154,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Apple,
                 libmSignature: LibmSignature.AppleLibm,
                 audioSum: undefined,
+                fontPlatform: FontPlatform.Apple,
             },
         ],
     },
@@ -155,6 +168,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Minikin,
                 libmSignature: LibmSignature.Ucrt,
                 audioSum: 956.3164,
+                fontPlatform: undefined,
             },
         ],
     },
@@ -168,6 +182,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Bundled,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 766.5973,
+                fontPlatform: undefined,
             },
         ],
     },
@@ -181,6 +196,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Minikin,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 956.3164,
+                fontPlatform: undefined,
             },
         ],
     },
@@ -194,6 +210,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Bundled,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 766.5973,
+                fontPlatform: undefined,
             },
             {
                 majorVersion: '152',
@@ -201,6 +218,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Bundled,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 766.5973,
+                fontPlatform: undefined,
             },
         ],
     },
@@ -214,6 +232,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Minikin,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: 956.572,
+                fontPlatform: undefined,
             },
         ],
     },
@@ -228,6 +247,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Minikin,
                 libmSignature: LibmSignature.Ucrt,
                 audioSum: 956.3164,
+                fontPlatform: undefined,
             },
         ],
     },
@@ -246,6 +266,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Minikin,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: undefined,
+                fontPlatform: undefined,
             },
         ],
     },
@@ -260,6 +281,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Minikin,
                 libmSignature: LibmSignature.Ucrt,
                 audioSum: undefined,
+                fontPlatform: undefined,
             },
         ],
     },
@@ -274,6 +296,7 @@ export const osFingerprintReference: ReadonlyArray<FingerprintReferenceEntry> = 
                 hyphenationDictionary: HyphenationDictionary.Minikin,
                 libmSignature: LibmSignature.Glibc,
                 audioSum: undefined,
+                fontPlatform: undefined,
             },
         ],
     },
@@ -289,6 +312,7 @@ export type FingerprintFieldValues = Readonly<{
     hyphenationDictionaries: ReadonlyArray<HyphenationDictionary>;
     libmSignatures: ReadonlyArray<LibmSignature>;
     audioSums: ReadonlyArray<number>;
+    fontPlatforms: ReadonlyArray<FontPlatform>;
 }>;
 
 export function summarizeObservations(
@@ -310,6 +334,9 @@ export function summarizeObservations(
         ),
         audioSums: unique(
             filterMap(observations, (observation) => observation.audioSum, check.isDefined),
+        ),
+        fontPlatforms: unique(
+            filterMap(observations, (observation) => observation.fontPlatform, check.isDefined),
         ),
     };
 }

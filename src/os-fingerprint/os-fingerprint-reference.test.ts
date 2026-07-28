@@ -10,6 +10,7 @@ describe('audioSumsForArch', () => {
             cpuArch: CpuArchitecture.Arm,
             hyphenationDictionary: undefined,
             libmSignature: undefined,
+            fontPlatform: undefined,
             audioSum: 100,
         },
         {
@@ -17,6 +18,7 @@ describe('audioSumsForArch', () => {
             cpuArch: CpuArchitecture.X86,
             hyphenationDictionary: undefined,
             libmSignature: undefined,
+            fontPlatform: undefined,
             audioSum: 200,
         },
     ];

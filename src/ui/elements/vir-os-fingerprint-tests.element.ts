@@ -80,6 +80,7 @@ function renderDetectedTable(report: OsFingerprintReport) {
                     <th>Browser</th>
                     <th>Version</th>
                     <th>CPU Arch</th>
+                    <th>Installed Marker Fonts</th>
                 </tr>
             </thead>
             <tbody>
@@ -88,6 +89,7 @@ function renderDetectedTable(report: OsFingerprintReport) {
                     <td>${report.groundTruth.browserName || 'unknown'}</td>
                     <td>${report.groundTruth.browserVersion || 'unknown'}</td>
                     <td>${report.detectedCpuArch || 'unknown'}</td>
+                    <td>${renderValues(report.installedFonts)}</td>
                 </tr>
             </tbody>
         </table>
@@ -108,6 +110,7 @@ function renderReferenceRow({
         .join(' ');
     const cells: ReadonlyArray<ReadonlyArray<string>> = [
         summary.hyphenationDictionaries,
+        summary.fontPlatforms,
         summary.libmSignatures,
     ];
 
@@ -135,6 +138,7 @@ function renderReferenceTable(report: OsFingerprintReport) {
                 <tr>
                     <th>Id</th>
                     <th>Hyphenation</th>
+                    <th>Fonts</th>
                     <th>Libm</th>
                     <th>Audio Sum</th>
                 </tr>
